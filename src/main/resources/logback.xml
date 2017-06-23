@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<contextName>tower-hawk</contextName>
+	<jmxConfigurator/>
+	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%-5p [%t] %X{hostName} %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} [%C{1}.%M]: %m%n</pattern>
+		</encoder>
+	</appender>
+	<root level="DEBUG">
+		<appender-ref ref="console"/>
+	</root>
+</configuration>

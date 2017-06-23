@@ -1,0 +1,7 @@
+spring:
+ application:
+   name: tower-hawk
+ cloud:
+   config:
+     failFast: false
+     enabled: false
