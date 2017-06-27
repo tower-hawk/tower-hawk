@@ -55,7 +55,9 @@ public class CheckWatcher {
 			Path path = Paths.get(configuration.getCheckDefinitionDir());
 			WatchKey key = path.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 			keys.put(key, path);
-			start();
+			if (configuration.isAutomaticallyWatchFiles()) {
+				start();
+			}
 		} catch (IOException e) {
 			log.error("Not starting watcher service due to error registering watches", e);
 			stop();

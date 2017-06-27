@@ -7,6 +7,7 @@ import org.towerhawk.check.AbstractCheck;
 import org.towerhawk.check.Check;
 import org.towerhawk.check.run.CheckRun;
 import org.towerhawk.check.run.CheckRunner;
+import org.towerhawk.spring.Configuration;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -19,51 +20,40 @@ public class App extends AbstractCheck {
 
 	private Logger log = LoggerFactory.getLogger(this.getClass());
 	protected Map<String, Check> checks = new LinkedHashMap<>();
-	protected boolean enabled = true;
+	protected long defaultCacheMs;
+	protected long defaultTimeoutMs;
+	protected long defaultRetryIntervalMs;
+	protected long defaultConsecutiveFailures;
+	protected int defaultPriority;
 
 	protected CheckRunner checkRunner;
 
-	//TODO add notion of defaults that are separate from settings for app (since an app is a check and can be run)
+	//TODO add notion of defaults that are separate from settings for app (since an app is a getCheck and can be run)
 
 	public App() {
 		//Set some defaults
-		cacheMs = 30000;
-		timeoutMs = 60000;
-		retryIntervalMs = 60000;
-		consecutiveFailures = 1;
-		priority = 20;
+		Configuration configuration = Configuration.get();
+		defaultCacheMs = configuration.getDefaultCacheMs();
+		defaultTimeoutMs = configuration.getDefaultTimeoutMs();
+		defaultRetryIntervalMs = configuration.getDefaultRetryIntervalMs();
+		defaultConsecutiveFailures = configuration.getDefaultConsecutiveFailures();
+		defaultPriority = configuration.getDefaultPriority();
 		type = "app";
-	}
-
-	public Map<String, Check> getChecks() {
-		return checks;
-	}
-
-	public void setCheckRunner(CheckRunner checkRunner) {
-		this.checkRunner = checkRunner;
-	}
-
-	public Boolean getEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(Boolean enabled) {
-		this.enabled = enabled;
 	}
 
 	@Override
 	protected void doRun(CheckRun.Builder checkRunBuilder) {
-		if (enabled) {
+		if (isEnabled()) {
 			List<CheckRun> checkRuns = checkRunner.runChecks(checks.values());
 			//TODO aggregate checkRuns and add info to builder
-			if (checkRuns.stream().anyMatch(r -> r.status() == CheckRun.Status.CRITICAL)) {
+			if (checkRuns.stream().anyMatch(r -> r.getStatus() == CheckRun.Status.CRITICAL)) {
 				checkRunBuilder.critical();
-			} else if (checkRuns.stream().anyMatch(r -> r.status() == CheckRun.Status.WARNING)) {
+			} else if (checkRuns.stream().anyMatch(r -> r.getStatus() == CheckRun.Status.WARNING)) {
 				checkRunBuilder.warning();
 			} else {
 				checkRunBuilder.succeeded();
 			}
-			checkRuns.forEach(checkRun -> checkRunBuilder.addContext(checkRun.check().getId(), checkRun));
+			checkRuns.forEach(checkRun -> checkRunBuilder.addContext(checkRun.getCheck().getId(), checkRun));
 		}
 	}
 
@@ -77,8 +67,8 @@ public class App extends AbstractCheck {
 			c.init(previousApp == null ? null : previousApp.getChecks().get(c.getId()));
 		});
 		checks = Collections.unmodifiableMap(checks);
-		if (enabled) {
-			log.info("Initialized app {}", id);
+		if (isEnabled()) {
+			log.info("Initialized app {}", getId());
 		}
 	}
 
@@ -92,5 +82,53 @@ public class App extends AbstractCheck {
 				log.error("Check {} failed to close with error", c.getId(), e);
 			}
 		});
+	}
+
+	public Map<String, Check> getChecks() {
+		return checks;
+	}
+
+	public void setCheckRunner(CheckRunner checkRunner) {
+		this.checkRunner = checkRunner;
+	}
+
+	public long getDefaultCacheMs() {
+		return defaultCacheMs;
+	}
+
+	public void setDefaultCacheMs(long defaultCacheMs) {
+		this.defaultCacheMs = defaultCacheMs;
+	}
+
+	public long getDefaultTimeoutMs() {
+		return defaultTimeoutMs;
+	}
+
+	public void setDefaultTimeoutMs(long defaultTimeoutMs) {
+		this.defaultTimeoutMs = defaultTimeoutMs;
+	}
+
+	public long getDefaultRetryIntervalMs() {
+		return defaultRetryIntervalMs;
+	}
+
+	public void setDefaultRetryIntervalMs(long defaultRetryIntervalMs) {
+		this.defaultRetryIntervalMs = defaultRetryIntervalMs;
+	}
+
+	public long getDefaultConsecutiveFailures() {
+		return defaultConsecutiveFailures;
+	}
+
+	public void setDefaultConsecutiveFailures(long defaultConsecutiveFailures) {
+		this.defaultConsecutiveFailures = defaultConsecutiveFailures;
+	}
+
+	public int getDefaultPriority() {
+		return defaultPriority;
+	}
+
+	public void setDefaultPriority(int defaultPriority) {
+		this.defaultPriority = defaultPriority;
 	}
 }

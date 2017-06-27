@@ -25,7 +25,7 @@ public abstract class AbstractCheck implements Check {
 	private static final Logger log = LoggerFactory.getLogger(AbstractCheck.class);
 
 	protected String type;
-	protected String id = null;
+	private String id = null;
 	protected long runTimestamp = 0;
 	protected long cacheMs = Check.CACHE_MS;
 	protected long timeoutMs = Check.TIMEOUT_MS;
@@ -33,25 +33,23 @@ public abstract class AbstractCheck implements Check {
 	protected long consecutiveFailures = Check.CONSECUTIVE_FAILURES;
 	protected int priority = Check.PRIORITY;
 	protected String alias = null;
-	protected App app = null;
+	private App app = null;
 	protected Set<String> tags = new LinkedHashSet<>();
-	protected ActiveCheck activeCheck = new AlwaysActive();
+	private ActiveCheck activeCheck = null;
 	@JsonIgnore
 	protected RecentCheckRun recentChecks = new RecentCheckRun();
 	protected boolean running = false;
 	protected long runningStartTimeMs = 0;
+	private boolean enabled = true;
 
 	@Override
-	public String getId() {
+	public final String getId() {
 		return id;
 	}
 
 	@Override
 	public void setId(String id) {
 		this.id = id;
-		if (alias == null) {
-			this.alias = id;
-		}
 	}
 
 	@Override
@@ -85,7 +83,7 @@ public abstract class AbstractCheck implements Check {
 	}
 
 	@Override
-	public App getApp() {
+	public final App getApp() {
 		return app;
 	}
 
@@ -105,8 +103,12 @@ public abstract class AbstractCheck implements Check {
 	}
 
 	@Override
-	public boolean isActive() {
+	public final boolean isActive() {
 		return activeCheck.isActive();
+	}
+
+	public void setActiveCheck(ActiveCheck activeCheck) {
+		this.activeCheck = activeCheck;
 	}
 
 	@Override
@@ -130,12 +132,24 @@ public abstract class AbstractCheck implements Check {
 	}
 
 	@Override
-	public CheckRun run() {
-		log.debug("Running check {}", id);
+	public final boolean isEnabled() {
+		return enabled;
+	}
+
+	@Override
+	public final CheckRun run() {
+		log.debug("Running getCheck {}", id);
 		runningStartTimeMs = System.currentTimeMillis();
-		if (!isActive() || runningStartTimeMs - runTimestamp < cacheMs) {
-			log.debug("Not running check because either isActive returned {} or {} ms since last execution is < {}", isActive(), runningStartTimeMs - runTimestamp, cacheMs);
-			return recentChecks.getLastRun();
+		if (!isEnabled() || !isActive() || runningStartTimeMs - runTimestamp < cacheMs) {
+			log.debug("Not running getCheck because either isActive returned {} or {} ms since last execution is < {}", isActive(), runningStartTimeMs - runTimestamp, cacheMs);
+			//TODO work out this logic better so that if a getCheck has become disabled or inactive
+			//TODO that it doesn't continually alert.
+			CheckRun checkRun = recentChecks.getLastRun();
+			if (checkRun != null && checkRun.getStatus() == CheckRun.Status.SUCCEEDED) {
+				return checkRun;
+			} else {
+				return null;
+			}
 		}
 		running = true;
 		CheckRun.Builder checkRunBuilder = CheckRun.builder(this);
@@ -144,21 +158,21 @@ public abstract class AbstractCheck implements Check {
 			doRun(checkRunBuilder);
 		} catch (InterruptedException e) {
 			checkRunBuilder.timedOut(true);
-			checkRunBuilder.unknown(true);
+			checkRunBuilder.unknown();
 			checkRunBuilder.error(e);
-			checkRunBuilder.consecutiveFailures(this.consecutiveFailures);
+			checkRunBuilder.consecutiveFailures(++this.consecutiveFailures);
 			log.warn("Check {} got interrupted", id);
 		}
 		long endNano = System.nanoTime();
 		runTimestamp = System.currentTimeMillis();
-		checkRunBuilder.startTimeMillis(runningStartTimeMs);
-		checkRunBuilder.endTimeMillis(runTimestamp);
-		checkRunBuilder.runTimeNanos(endNano - startNano);
+		checkRunBuilder.startTime(runningStartTimeMs);
+		checkRunBuilder.endTime(runTimestamp);
+		checkRunBuilder.durationNanos(endNano - startNano);
 		CheckRun run = checkRunBuilder.build();
 		recentChecks.addCheckRun(run);
 		runningStartTimeMs = 0;
 		running = false;
-		log.debug("Ending check {}", id);
+		log.debug("Ending getCheck {}", id);
 		return run;
 	}
 
@@ -168,40 +182,43 @@ public abstract class AbstractCheck implements Check {
 			throw new IllegalStateException("id must be set before calling init");
 		}
 		if (check != null && !id.equals(check.getId())) {
-			throw new IllegalArgumentException("Check ids must be equal to initalize from another check");
+			throw new IllegalArgumentException("Check ids must be equal to initalize from another getCheck");
 		}
 		if (check != null && check instanceof AbstractCheck) {
 			setRecentChecks(((AbstractCheck) check).getRecentChecks());
 		}
 		if (cacheMs == Check.CACHE_MS) {
-			cacheMs = app.getCacheMs();
+			cacheMs = app.getDefaultCacheMs();
 		}
 		if (timeoutMs == Check.TIMEOUT_MS) {
-			timeoutMs = app.getTimeoutMs();
+			timeoutMs = app.getDefaultTimeoutMs();
 		}
 		if (retryIntervalMs == Check.RETRY_INTERVAL_MS) {
-			retryIntervalMs = app.getRetryIntervalMs();
+			retryIntervalMs = app.getDefaultRetryIntervalMs();
 		}
 		if (consecutiveFailures == Check.CONSECUTIVE_FAILURES) {
-			consecutiveFailures = app.getConsecutiveFailuresToAlert();
+			consecutiveFailures = app.getDefaultConsecutiveFailures();
 		}
 		if (priority == Check.PRIORITY) {
-			priority = app.getPriority();
+			priority = app.getDefaultPriority();
 		}
 		if (alias == null) {
 			alias = id;
 		}
-		log.debug("Initialized check {}", id);
+		if (activeCheck == null) {
+			activeCheck = new AlwaysActive();
+		}
+		log.debug("Initialized getCheck {}", id);
 	}
 
 	@Override
 	public void close() throws IOException {
-		log.debug("Closing check {}", id);
+		log.debug("Closing getCheck {}", id);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof Check) {
+		if (obj instanceof Check) { //implicit null check
 			Check that = (Check) obj;
 			if (id != null
 				&& app != null
@@ -246,7 +263,7 @@ public abstract class AbstractCheck implements Check {
 	/**
 	 * This is the method each concrete class should implement
 	 * The builder is retained by the abstract class and used to
-	 * set values like runTimeNanos, startTime, endTime, and
+	 * set values like getDuration, getStartTime, getEndTime, and
 	 * other things that should be handled in a standard way.
 	 *
 	 * @param checkRunBuilder

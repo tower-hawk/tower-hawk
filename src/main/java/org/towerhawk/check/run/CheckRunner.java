@@ -51,16 +51,16 @@ public class CheckRunner {
 				log.trace("Getting results");
 				CheckRun checkRun = completionService.take().get();
 				if (checkRun != null) {
-					log.trace("Got result for {}", checkRun.check().getId());
+					log.trace("Got result for {}", checkRun.getCheck().getId());
 					checkRuns.add(checkRun);
 				} else {
-					log.error("Unhandled error was thrown");
+					log.error("Null CheckRun was returned");
 				}
 			} catch (InterruptedException e) {
-				log.warn("Thread interrupted while waiting for checks to complete. Returning immediately.");
+				log.warn("Thread interrupted while waiting for checks to complete. Returning immediately.", e);
 				break;
 			} catch (ExecutionException e) {
-				log.error("Check::run returned unhandled exception");
+				log.error("Check::run returned unhandled exception", e);
 			}
 		}
 		log.trace("Returning results");
@@ -92,20 +92,20 @@ public class CheckRunner {
 				checkRun = checkRunFuture.get(check.getTimeoutMs() + graceMs, TimeUnit.MILLISECONDS);
 				log.trace("Got actual job for {}", check.getId());
 			} catch (InterruptedException e) {
-				log.warn("Thread interrupted while waiting for Check::run to execute. Assuming shutdown in progress so not waiting for execution to return.");
+				log.warn("Thread interrupted while waiting for Check::run to execute. Assuming shutdown in progress so not waiting for execution to return.", e);
 				Thread.currentThread().interrupt();
 			} catch (ExecutionException e) {
 				log.error("Check::run returned unhandled exception", e);
 			} catch (TimeoutException e) {
 				log.warn("Cancelling future for {}", check.getId());
 				checkRunFuture.cancel(true);
-				while (!checkRunFuture.isDone()) {
+				while (!checkRunFuture.isDone() || checkRun == null) {
 					try {
 						checkRun = checkRunFuture.get(executionCleanupMs, TimeUnit.MILLISECONDS);
 						log.debug("Got checkRun for {} after calling cancel", check.getId());
 						break;
 					} catch (InterruptedException e1) {
-						log.warn("Thread interrupted while waiting for Check::run to clean up. Assuming shutdown in progress so not waiting for execution to return.");
+						log.warn("Thread interrupted while waiting for Check::run to clean up. Assuming shutdown in progress so not waiting for execution to return.", e1);
 						Thread.currentThread().interrupt();
 						break;
 					} catch (ExecutionException e1) {
@@ -113,8 +113,13 @@ public class CheckRunner {
 						break;
 					} catch (TimeoutException e1) {
 						log.warn("Check::run has not completed after timing out and cleanup time. Waiting until it finishes before relinquishing thread");
+					} catch (Exception e1) {
+						log.error("Unexpected exception thrown while trying to cleanup getCheck", e1);
+						break;
 					}
 				}
+			} catch (Exception e) {
+				log.error("Caught unexpected exception trying to get results of a getCheck", e);
 			}
 			return checkRun;
 		}

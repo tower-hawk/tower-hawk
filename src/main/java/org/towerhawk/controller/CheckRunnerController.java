@@ -1,5 +1,6 @@
 package org.towerhawk.controller;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,7 +47,7 @@ public class CheckRunnerController {
 		} catch (JsonProcessingException e) {
 			log.error("Error writing object to string", e);
 		}
-		return new ResponseEntity<String>(returnVal, HttpStatus.SERVICE_UNAVAILABLE);
+		return new ResponseEntity<String>(returnVal, HttpStatus.valueOf(200));
 	}
 
 	@RequestMapping(path = "/app/{appId}")
@@ -66,6 +67,7 @@ public class CheckRunnerController {
 		mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		mapper.configure(MapperFeature.REQUIRE_SETTERS_FOR_GETTERS, false);
 		mapper.configure(MapperFeature.USE_GETTERS_AS_SETTERS, true);
+		mapper.configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
 		String returnVal = "";
 		try {
 			returnVal = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(checkRun);

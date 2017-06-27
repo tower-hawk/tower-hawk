@@ -11,10 +11,6 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
-//@JsonSubTypes({
-//	@JsonSubTypes.Type(value = PortCheck.class, name = ".PortCheck"),
-//	@JsonSubTypes.Type(value = ShellCheck.class, name = ".ShellCheck")
-//})
 public interface Check extends Comparable<Check>, Closeable {
 
 	long CACHE_MS = -1;
@@ -60,4 +56,6 @@ public interface Check extends Comparable<Check>, Closeable {
 	long getRunningStartTimeMs();
 
 	void init(Check check);
+
+	boolean isEnabled();
 }

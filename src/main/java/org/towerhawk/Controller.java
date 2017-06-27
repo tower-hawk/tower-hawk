@@ -11,7 +11,7 @@ public class Controller {
 	@Inject
 	private CheckService checkService;
 
-	//	@RequestMapping(path="/check/reload", method=RequestMethod.GET)
+	//	@RequestMapping(path="/getCheck/reload", method=RequestMethod.GET)
 	//	public boolean reload(@RequestParam(value="name", defaultValue="World") String name) {
 	//		return checkService.refreshDefinitions();
 	//	}
@@ -24,7 +24,7 @@ public class Controller {
 	//		return checkService;
 	//	}
 	//
-	//	@RequestMapping(value = "/check/**", method=RequestMethod.GET)
+	//	@RequestMapping(value = "/getCheck/**", method=RequestMethod.GET)
 	//	public CheckService getFoo(final HttpServletRequest request,
 	//														 @RequestParam String name) {
 	//

@@ -3,27 +3,29 @@ package org.towerhawk.check.run;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.towerhawk.check.Check;
+import org.towerhawk.jackson.serializer.DurationSerializer;
+import org.towerhawk.jackson.serializer.TemporalAccessorSerializer;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Map;
 
 public class CheckRunImpl implements CheckRun {
 
 	@JsonSerialize
 	final private Status status;
-	@JsonSerialize
-	final private boolean unknown;
 	@JsonIgnore
 	final private Throwable error;
 	@JsonSerialize
-	final private String errorMessage;
+	final private String statusMessage;
 	@JsonSerialize
 	final private Map<String, Object> context;
-	@JsonSerialize
-	final private long runTimeNanos;
-	@JsonSerialize
-	final private long startTimeMillis;
-	@JsonSerialize
-	final private long endTimeMillis;
+	@JsonSerialize(using = DurationSerializer.class)
+	final private Duration duration;
+	@JsonSerialize(using = TemporalAccessorSerializer.class)
+	final private ZonedDateTime startTime;
+	@JsonSerialize(using = TemporalAccessorSerializer.class)
+	final private ZonedDateTime endTime;
 	@JsonSerialize
 	final private long consecutiveFailures;
 	@JsonSerialize
@@ -35,17 +37,22 @@ public class CheckRunImpl implements CheckRun {
 	@JsonIgnore
 	final private CheckRun previousCheckRun;
 
-	protected CheckRunImpl(Status status, boolean unknown, Throwable error,
-												 Map<String, Object> context, long runTimeNanos, long startTimeMillis, long endTimeMillis,
+	protected CheckRunImpl(CheckRun c) {
+		this(c.getStatus(), c.getError(), c.getStatusMessage(), c.getContext(),
+			c.getDuration(), c.getStartTime(), c.getEndTime(), c.getConsecutiveFailures(),
+			c.isTimedOut(), c.getRetries(), c.getCheck(), c.getPreviousCheckRun());
+	}
+
+	protected CheckRunImpl(Status status, Throwable error, String statusMessage,
+												 Map<String, Object> context, Duration duration, ZonedDateTime startTime, ZonedDateTime endTime,
 												 long consecutiveFailures, boolean timedOut, long retries, Check check, CheckRun previousCheckRun) {
 		this.status = status;
-		this.unknown = unknown;
 		this.error = error;
-		this.errorMessage = error == null ? null : error.getMessage();
+		this.statusMessage = statusMessage != null ? statusMessage : error != null ? error.getMessage() : null;
 		this.context = context;
-		this.runTimeNanos = runTimeNanos;
-		this.startTimeMillis = startTimeMillis;
-		this.endTimeMillis = endTimeMillis;
+		this.duration = duration;
+		this.startTime = startTime;
+		this.endTime = endTime;
 		this.consecutiveFailures = consecutiveFailures;
 		this.timedOut = timedOut;
 		this.retries = retries;
@@ -54,13 +61,8 @@ public class CheckRunImpl implements CheckRun {
 	}
 
 	@Override
-	public Status status() {
+	public Status getStatus() {
 		return status;
-	}
-
-	@Override
-	public boolean unknown() {
-		return unknown;
 	}
 
 	@Override
@@ -69,61 +71,61 @@ public class CheckRunImpl implements CheckRun {
 	}
 
 	@Override
-	public String errorMessage() {
-		return errorMessage;
+	public String getStatusMessage() {
+		return statusMessage;
 	}
 
 	@Override
-	public Map<String, Object> context() {
+	public Map<String, Object> getContext() {
 		return context;
 	}
 
 	@Override
-	public long runTimeNanos() {
-		return runTimeNanos;
+	public Duration getDuration() {
+		return duration;
 	}
 
 	@Override
-	public long startTimeMillis() {
-		return startTimeMillis;
+	public ZonedDateTime getStartTime() {
+		return startTime;
 	}
 
 	@Override
-	public long endTimeMillis() {
-		return endTimeMillis;
+	public ZonedDateTime getEndTime() {
+		return endTime;
 	}
 
 	@Override
-	public long consecutiveFailures() {
+	public long getConsecutiveFailures() {
 		return consecutiveFailures;
 	}
 
 	@Override
-	public boolean timedOut() {
+	public boolean isTimedOut() {
 		return timedOut;
 	}
 
 	@Override
-	public long retries() {
+	public long getRetries() {
 		return retries;
 	}
 
 	@Override
-	public Check check() {
+	public Check getCheck() {
 		return check;
 	}
 
 	@Override
-	public CheckRun previousCheckRun() {
+	public CheckRun getPreviousCheckRun() {
 		return previousCheckRun;
 	}
 
 	@Override
 	public int compareTo(CheckRun o) {
-		//sort by status ordinal
-		int ordinal = Integer.compare(status.getOrdinal(), o.status().getOrdinal());
-		//return -ordinal to sort by status desc and if equal then by priority
-		int returnVal = ordinal != 0 ? -ordinal : Integer.compare(check.getPriority(), o.check().getPriority());
+		//sort by getStatus ordinal
+		int ordinal = Integer.compare(status.getOrdinal(), o.getStatus().getOrdinal());
+		//return -ordinal to sort by getStatus desc and if equal then by priority
+		int returnVal = ordinal != 0 ? ordinal : Integer.compare(check.getPriority(), o.getCheck().getPriority());
 		return returnVal;
 	}
 }

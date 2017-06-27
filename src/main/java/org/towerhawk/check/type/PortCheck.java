@@ -36,103 +36,132 @@ public class PortCheck extends AbstractCheck {
 				socket = new Socket(host, port, address, localPort);
 			}
 			if (send != null && !send.isEmpty() && expectRegex != null && !expectRegex.isEmpty()) {
-				OutputStream os = socket.getOutputStream();
-				os.write(send.getBytes(outputCharset));
-				os.flush();
-				String result = transformInputStream(socket.getInputStream());
-				if (includeOutputInContext) {
-					builder.addContext("output", result);
-				}
-				if (result.matches(expectRegex)) {
-					builder.succeeded();
-					builder.addContext("expectRegex", "found");
-				} else {
-					builder.addContext("expectRegex", "not found");
-					if (matchIsCritical) {
-						builder.critical();
-					} else {
-						builder.warning();
-					}
-				}
+				sendAndReadFromSocket(builder, socket);
 			} else {
 				builder.succeeded();
 				builder.addContext("connection", String.format("Connection to %s:%d successful.", host, port));
 			}
+
 		} catch (Exception e) {
 			builder.addContext("connection", String.format("Connection to %s:%d failed", host, port));
+			builder.error(e);
 			builder.critical();
+			log.warn("Failing getCheck {} due to exception {}", getId(), e);
 		} finally {
 			try {
 				if (socket != null) {
 					socket.close();
 				}
 			} catch (IOException e) {
-				log.error("Unable to close connection", e);
+				log.error("Unable to close connection for {}", getId(), e);
 			}
 		}
 	}
 
-	private int getPort() {
+	protected void sendAndReadFromSocket(CheckRun.Builder builder, Socket socket) {
+		try {
+			socket.setSoTimeout(getTimeRemaining());
+			OutputStream os = socket.getOutputStream();
+			os.write(send.getBytes(outputCharset));
+			os.flush();
+			String result = transformInputStream(socket.getInputStream());
+			if (includeOutputInContext) {
+				builder.addContext("output", result);
+			}
+			if (result.matches(expectRegex)) {
+				builder.succeeded();
+				builder.addContext("expectRegex", "found");
+			} else {
+				builder.addContext("expectRegex", "not found");
+				if (matchIsCritical) {
+					builder.critical();
+				} else {
+					builder.warning();
+				}
+			}
+		} catch (Exception e) {
+			builder.addContext("send", String.format("Exception caught when trying to send or read from socket %s", e.getMessage()));
+			log.warn("Exception caught on getCheck {} when trying to send or read from socket {}", getId(), e);
+		}
+	}
+
+	protected int getTimeRemaining() {
+		long timeRemaining = getTimeoutMs() - (System.currentTimeMillis() - runningStartTimeMs);
+		if (timeRemaining < 0) {
+			throw new IllegalStateException("Check is timed out before running expected output");
+		}
+		return (int) timeRemaining;
+	}
+
+	public int getPort() {
 		return port;
 	}
 
-	private void setPort(int port) {
+	public void setPort(int port) {
 		this.port = port;
 	}
 
-	private String getHost() {
+	public String getHost() {
 		return host;
 	}
 
-	private void setHost(String host) {
+	public void setHost(String host) {
 		this.host = host;
 	}
 
-	private int getLocalPort() {
+	public int getLocalPort() {
 		return localPort;
 	}
 
-	private void setLocalPort(int localPort) {
+	public void setLocalPort(int localPort) {
 		this.localPort = localPort;
 	}
 
-	private String getLocalHost() {
+	public String getLocalHost() {
 		return localHost;
 	}
 
-	private void setLocalHost(String localHost) {
+	public void setLocalHost(String localHost) {
 		this.localHost = localHost;
 	}
 
-	private String getSend() {
+	public String getSend() {
 		return send;
 	}
 
-	private void setSend(String send) {
+	public void setSend(String send) {
 		this.send = send;
 	}
 
-	private String getExpectRegex() {
+	public String getExpectRegex() {
 		return expectRegex;
 	}
 
-	private void setExpectRegex(String expectRegex) {
+	public void setExpectRegex(String expectRegex) {
 		this.expectRegex = expectRegex;
 	}
 
-	private String getOutputCharset() {
+	public String getOutputCharset() {
 		return outputCharset;
 	}
 
-	private void setOutputCharset(String outputCharset) {
+	public void setOutputCharset(String outputCharset) {
 		this.outputCharset = outputCharset;
 	}
 
-	private boolean isMatchIsCritical() {
+	public boolean isMatchIsCritical() {
 		return matchIsCritical;
 	}
 
-	private void setMatchIsCritical(boolean matchIsCritical) {
+	public void setMatchIsCritical(boolean matchIsCritical) {
 		this.matchIsCritical = matchIsCritical;
+	}
+
+	public boolean isIncludeOutputInContext() {
+		return includeOutputInContext;
+	}
+
+	public void setIncludeOutputInContext(boolean includeOutputInContext) {
+		this.includeOutputInContext = includeOutputInContext;
 	}
 }

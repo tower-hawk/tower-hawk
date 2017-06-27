@@ -16,6 +16,11 @@ apps:
         port: 2181
         send: ruok
         expectRegex: imok
+        includeOutputInContext: true
+        activeCheck:
+          type: .ScheduleActive
+          startHour: 9
+          endHour: 9
         matchIsCritical: false
         tags:
           - tcp
