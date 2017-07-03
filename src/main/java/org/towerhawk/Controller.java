@@ -1,7 +1,7 @@
 package org.towerhawk;
 
 import org.springframework.web.bind.annotation.RestController;
-import org.towerhawk.check.CheckService;
+import org.towerhawk.monitor.MonitorService;
 
 import javax.inject.Inject;
 
@@ -9,7 +9,7 @@ import javax.inject.Inject;
 public class Controller {
 
 	@Inject
-	private CheckService checkService;
+	private MonitorService monitorService;
 
 	//	@RequestMapping(path="/getCheck/reload", method=RequestMethod.GET)
 	//	public boolean reload(@RequestParam(value="name", defaultValue="World") String name) {

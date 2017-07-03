@@ -3,7 +3,7 @@ package org.towerhawk.jackson.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.towerhawk.spring.Configuration;
+import org.towerhawk.spring.config.Configuration;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -11,16 +11,16 @@ import java.time.temporal.TemporalAccessor;
 
 public class TemporalAccessorSerializer extends StdSerializer<TemporalAccessor> {
 
-	private DateTimeFormatter formatter;
+	private Configuration configuration;
 
-	public TemporalAccessorSerializer() {
+	public TemporalAccessorSerializer(Configuration configuration) {
 		super(TemporalAccessor.class);
-		formatter = Configuration.get().getDateTimeFormatter();
+		this.configuration = configuration;
 	}
 
 	@Override
 	public void serialize(TemporalAccessor value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-		String formattedZonedDateTime = formatter.format(value);
+		String formattedZonedDateTime = configuration.getDateTimeFormatter().format(value);
 		gen.writeString(formattedZonedDateTime);
 	}
 }

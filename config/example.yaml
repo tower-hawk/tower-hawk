@@ -2,34 +2,37 @@ apps:
   zookeeper:
     alias: zk
     cacheMs: 1000
+    defaultCacheMs: 1000
     timeoutMs: 20000
     priority: 0
     tags:
       - java
     checks:
       port2181:
-        type: .type.PortCheck
+        type: .type.Port
         alias: zkPort
         priority: 2
         timeoutMs: 2000
-        host: 192.168.1.202
+        host: localhost
         port: 2181
         send: ruok
         expectRegex: imok
         includeOutputInContext: true
         activeCheck:
-          type: .ScheduleActive
-          startHour: 9
-          endHour: 9
+          type: .DailyScheduleActive
+          startTime: 09:00:59.234567891
+          endTime: 17:00:03.345678901
+          timeFormat: HH:mm:ss.SSSSSSSSS
         matchIsCritical: false
+        unknownIsCritical: false
         tags:
           - tcp
       zkProcess:
-        type: .type.ShellCheck
+        type: .type.Shell
         alias: zkProcess
         priority: 1
         timeoutMs: 3000
-        cmd: 'echo $SOME_VAR'
+        cmd: '/tmp/testCheck.sh'
         env:
           SOME_VAR: someValue
           OTHER_VAR: otherValue
@@ -39,14 +42,15 @@ apps:
           sizeLimit: 20
   kafka:
     alias: messaging
-    cacheMs: 120000
+    cacheMs: 1000
+    defaultCacheMs: 1000
     timeoutMs: 20000
-    priority: 0
+    priority: 2
     tags:
       - java
     checks:
       port9092:
-        type: .type.PortCheck
+        type: .type.Port
         alias: kafkaPort
         priority: 2
         timeoutMs: 1000

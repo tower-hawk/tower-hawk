@@ -10,52 +10,8 @@
 post to /refresh refreshes the definitions
 post to */restarting tells the app to only start alerting once checks have cleared
 
-Multiple files should be able to be merged together so each app can maintain its own yaml spec
-Files should be checked for changes (or a listener should be registered) and the tree rebuilt periodically
-https://dzone.com/articles/read-yaml-in-java-with-jackson
-http://docs.spring.io/spring/docs/3.0.x/reference/expressions.html
-Need to consider aliasing commands for other commands so that just args and apps can be passed in
-
 eventually, machine learning on outputs or combined alerts should be able to predict alerts that are going to come up and take steps to avoid issues
 Some alerts should have commands that can be run to fix any issues that may be happening.
 
-app1:
-  env:
-    VAR3: val3
-  timeoutMs:
-  args:
-  workdir:
-  priority:
-  tags:
-    - apptag1
-  retryIntervalMs: 60000
-  failuresBeforeAlert: 5
 
-
-command 1:
-  apps:
-    - app1
-  type: {shell, jmx, expression, http, port, process, log, docker, etc.}
-  alias: http-safe-alias
-  args:
-    - arg 1
-    - arg 2
-  priority: 2
-  workDir: /etc/monitor
-  timeoutMs: 2000
-  env:
-    VAR1: val1
-    VAR2: val2
-  excludeParentEnv: true
-  tags:
-    - tag1
-  activeHours:
-    - 08-18
-  activeDays:
-    1-5
-  inactiveThresholdMultiplier:
-  inactiveTimeMultiplier:
-  cacheMs: 30000
-  critical:
-  warning:
 

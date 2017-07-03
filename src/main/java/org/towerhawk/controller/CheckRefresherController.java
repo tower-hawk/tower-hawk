@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.towerhawk.check.CheckService;
-import org.towerhawk.check.reader.CheckWatcher;
+import org.towerhawk.monitor.MonitorService;
+import org.towerhawk.monitor.reader.CheckWatcher;
 
 import javax.inject.Inject;
 
@@ -16,18 +16,18 @@ import javax.inject.Inject;
 public class CheckRefresherController {
 
 	private final CheckWatcher checkWatcher;
-	private final CheckService checkService;
+	private final MonitorService monitorService;
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Inject
-	public CheckRefresherController(CheckWatcher checkWatcher, CheckService checkService) {
+	public CheckRefresherController(CheckWatcher checkWatcher, MonitorService monitorService) {
 		this.checkWatcher = checkWatcher;
-		this.checkService = checkService;
+		this.monitorService = monitorService;
 	}
 
 	@RequestMapping(path = {"/", ""}, method = RequestMethod.POST)
 	public void refresh() {
-		checkService.refreshDefinitions();
+		monitorService.refreshDefinitions();
 	}
 
 	@RequestMapping(path = "/watcher", method = {RequestMethod.POST, RequestMethod.PUT})
