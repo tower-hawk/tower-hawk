@@ -1,10 +1,12 @@
 package org.towerhawk.monitor.check.type.system;
 
+import org.towerhawk.jackson.resolver.CheckType;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 
 import java.lang.management.ManagementFactory;
 
+@CheckType("loadAverage")
 public class LoadAverage extends AbstractCheck{
 
 	private int availableProcs = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();

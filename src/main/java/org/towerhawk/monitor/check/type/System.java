@@ -2,6 +2,7 @@ package org.towerhawk.monitor.check.type;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.towerhawk.jackson.resolver.CheckType;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
@@ -13,13 +14,11 @@ import org.towerhawk.monitor.check.type.system.PhysicalMemory;
 import org.towerhawk.monitor.check.type.system.SwapSpace;
 import org.towerhawk.spring.config.Configuration;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-
+@CheckType("system")
 public class System extends AbstractCheck {
 
 	private static Logger log = LoggerFactory.getLogger(System.class);

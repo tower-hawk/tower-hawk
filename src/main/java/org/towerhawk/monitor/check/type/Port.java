@@ -2,6 +2,7 @@ package org.towerhawk.monitor.check.type;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.towerhawk.jackson.resolver.CheckType;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
@@ -12,6 +13,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
+@CheckType("port")
 public class Port extends AbstractCheck {
 
 	private final Logger log = LoggerFactory.getLogger(this.getClass());

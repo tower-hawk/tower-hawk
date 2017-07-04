@@ -2,6 +2,7 @@ package org.towerhawk.monitor.check.type;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.towerhawk.jackson.resolver.CheckType;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.Map;
 
+@CheckType("shell")
 public class Shell extends AbstractCheck {
 
 	private final Logger log = LoggerFactory.getLogger(this.getClass());

@@ -2,6 +2,8 @@ package org.towerhawk.monitor.check;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
+import org.towerhawk.jackson.resolver.CheckTypeResolver;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.spring.config.Configuration;
@@ -12,7 +14,8 @@ import java.util.List;
 import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
+@JsonTypeIdResolver(CheckTypeResolver.class)
 public interface Check extends Comparable<Check>, Closeable {
 
 	long CACHE_MS = -1;

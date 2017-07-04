@@ -1,11 +1,13 @@
 package org.towerhawk.monitor.check.type.system;
 
 import com.sun.management.OperatingSystemMXBean;
+import org.towerhawk.jackson.resolver.CheckType;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 
 import java.lang.management.ManagementFactory;
 
+@CheckType("physicalMemory")
 public class PhysicalMemory extends AbstractCheck{
 	private double percentWarning = 0.95;
 	private double percentCritical = 0.99;

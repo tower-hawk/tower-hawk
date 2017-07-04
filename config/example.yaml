@@ -9,7 +9,7 @@ apps:
       - java
     checks:
       port2181:
-        type: .type.Port
+        type: port
         alias: zkPort
         priority: 2
         timeoutMs: 2000
@@ -28,7 +28,7 @@ apps:
         tags:
           - tcp
       zkProcess:
-        type: .type.Shell
+        type: shell
         alias: zkProcess
         priority: 1
         timeoutMs: 3000
@@ -50,7 +50,7 @@ apps:
       - java
     checks:
       port9092:
-        type: .type.Port
+        type: port
         alias: kafkaPort
         priority: 2
         timeoutMs: 1000
@@ -61,4 +61,4 @@ apps:
     cacheMs: 1000
     checks:
       system:
-        type: .type.System
+        type: system
