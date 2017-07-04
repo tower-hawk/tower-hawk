@@ -14,4 +14,14 @@ eventually, machine learning on outputs or combined alerts should be able to pre
 Some alerts should have commands that can be run to fix any issues that may be happening.
 
 
+TODO:
+  Allow for selection of attributes to be returned
+  Create classes to use for serialization so different implementations don't need to care
+  Create default checks that go under a default app and configurations to control their creation
+  Write more check classes
+  Finish api endpoints
+  Write documentation
+  Write unit tests
+  Write integration tests
+
 

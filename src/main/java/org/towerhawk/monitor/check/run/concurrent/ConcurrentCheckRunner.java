@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-public class ConcurrentCheckRunner implements CheckRunner {
+public class ConcurrentCheckRunner implements AsynchronousCheckRunner {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -34,8 +34,6 @@ public class ConcurrentCheckRunner implements CheckRunner {
 		log.debug("Building handlers");
 		Collection<ConcurrentCheckRunHandler> handlers = checkList.stream().map(c -> new ConcurrentCheckRunHandler(c, accumulator, interruptor)).collect(Collectors.toList());
 		handlers.forEach(h -> {
-			Check c = h.getCheck();
-			log.info("check {} canRun={} running={} active={} cached={}", c.getId(), c.canRun(), c.isRunning(), c.isActive(), c.isCached());
 			if (h.getCheck().canRun()) {
 				log.debug("Submitting handler for {}", h.getCheck().getId());
 				Future<CheckRun> handlerFuture = checkRunService.submit(h);

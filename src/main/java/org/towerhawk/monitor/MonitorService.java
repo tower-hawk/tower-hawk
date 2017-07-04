@@ -17,6 +17,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
@@ -97,6 +98,8 @@ public class MonitorService extends App {
 	}
 
 	private void postProcess(CheckDeserializer checkDeserializer) {
+		Collection<Check> appsToClose = new ArrayList<>();
+		//initialize all checks first
 		checkDeserializer.getApps().forEach((id, app) -> {
 			app.setId(id);
 			app.setApp(this);
@@ -104,11 +107,15 @@ public class MonitorService extends App {
 			Check previousApp = checks.get(app.getId());
 			app.init(previousApp, configuration);
 			if (previousApp != null) {
-				try {
-					previousApp.close();
-				} catch (IOException e) {
-					log.error("App {} failed to close with exception", app.getId(), e);
-				}
+				appsToClose.add(previousApp);
+			}
+		});
+		//then close old checks
+		appsToClose.forEach(previousApp -> {
+			try {
+				previousApp.close();
+			} catch (IOException e) {
+				log.error("App {} failed to close with exception", previousApp.getId(), e);
 			}
 		});
 	}

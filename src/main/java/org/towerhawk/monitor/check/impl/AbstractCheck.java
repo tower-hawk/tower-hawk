@@ -45,7 +45,7 @@ public abstract class AbstractCheck implements Check {
 	private boolean unknownIsCritical = true;
 	protected Configuration configuration;
 	private boolean initialized = false;
-	private CheckRun.Builder checkRunBuilder = null;
+	private CheckRun.Builder builder = null;
 
 	public final String getId() {
 		return id;
@@ -103,7 +103,7 @@ public abstract class AbstractCheck implements Check {
 
 	@Override
 	public final boolean isActive() {
-		return activeCheck.isActive();
+		return initialized && activeCheck.isActive();
 	}
 
 	public void setActiveCheck(ActiveCheck activeCheck) {
@@ -166,15 +166,14 @@ public abstract class AbstractCheck implements Check {
 
 	@Override
 	public final synchronized CheckRun run() {
-		log.debug("Starting run() for {}", id);
+		log.debug("Starting run() for {}", getId());
 		CheckRun checkRun;
-		if (!initialized) {
-			log.warn("Trying to run check before it is initialized");
-			return recentChecks.getLastRun();
-		} else if (!canRun()) {
+		if (!canRun()) {
 			if (running) {
 				log.debug("Check {} is already running", getId());
-			} else if (!isActive()) {
+			} else if (!initialized) {
+				log.warn("Trying to run check {} but it is not initialized", getId());
+			}	else if (!isActive()) {
 				log.debug("Check {} is not active", getId());
 				CheckRun lastRun = recentChecks.getLastRun();
 				if (lastRun.getStatus() != CheckRun.Status.SUCCEEDED) {
@@ -189,29 +188,29 @@ public abstract class AbstractCheck implements Check {
 			return recentChecks.getLastRun();
 		}
 		running = true;
-		checkRunBuilder = CheckRun.builder(this);
-		runStartTimestamp = checkRunBuilder.startTime();
+		builder = CheckRun.builder(this);
+		runStartTimestamp = builder.startTime();
 		try {
-			doRun(checkRunBuilder);
+			doRun(builder);
 		} catch (InterruptedException e) {
-			checkRunBuilder.timedOut(true).unknown().error(e);
-			log.warn("Check {} got interrupted", id);
+			builder.timedOut(true).unknown().error(e);
+			log.warn("Check {} got interrupted", getId());
 		} catch (Exception e) {
-			checkRunBuilder.error(e);
+			builder.error(e);
 			log.error("doRun() for check {} threw an exception", getId(), e);
 		} finally {
-			runEndTimestamp = checkRunBuilder.endTime();
-			if (checkRunBuilder.getStatus() == CheckRun.Status.SUCCEEDED) {
+			runEndTimestamp = builder.endTime();
+			if (builder.getStatus() == CheckRun.Status.SUCCEEDED) {
 				failingSince = null;
 			} else {
 				setFailingSince(runStartTimestamp);
 			}
-			checkRunBuilder.failingSince(failingSince);
-			checkRun = checkRunBuilder.build();
+			builder.failingSince(failingSince);
+			checkRun = builder.build();
 			recentChecks.addCheckRun(checkRun);
 			runStartTimestamp = 0;
 			running = false;
-			log.debug("Ending run() for {}", id);
+			log.debug("Ending run() for {}", getId());
 		}
 		return checkRun;
 	}
@@ -245,13 +244,10 @@ public abstract class AbstractCheck implements Check {
 				defaultCheckRunMessage = "No checks run since initialization";
 			}
 			CheckRun defaultCheckRun = CheckRun.builder(this, null).succeeded().message(defaultCheckRunMessage).build();
+			recentChecks = new RecentCheckRun(configuration.getRecentChecksSizeLimit(), defaultCheckRun);
 			if (check != null) {
 				check.getRecentCheckRuns().forEach(checkRun -> recentChecks.addCheckRun(checkRun));
-				if (check.getLastCheckRun() != null) {
-					defaultCheckRun = check.getLastCheckRun();
-				}
 			}
-			recentChecks = new RecentCheckRun(configuration.getRecentChecksSizeLimit(), defaultCheckRun);
 			initialized = true;
 			log.debug("Initialized check {}", id);
 		}
@@ -260,6 +256,8 @@ public abstract class AbstractCheck implements Check {
 	@Override
 	public void close() throws IOException {
 		log.debug("Closing check {}", id);
+		recentChecks = null;
+		builder = null;
 	}
 
 	@Override
@@ -282,14 +280,6 @@ public abstract class AbstractCheck implements Check {
 		return app.getId().hashCode() * 31 + id.hashCode();
 	}
 
-	private RecentCheckRun getRecentChecks() {
-		return recentChecks;
-	}
-
-	private void setRecentChecks(RecentCheckRun recentChecks) {
-		this.recentChecks = recentChecks;
-	}
-
 	protected String transformInputStream(InputStream inputStream) {
 		return new BufferedReader(new InputStreamReader(inputStream))
 			.lines().collect(Collectors.joining(configuration.getLineDelimiter()));
@@ -301,8 +291,8 @@ public abstract class AbstractCheck implements Check {
 	 * set values like getDuration, getStartTime, getEndTime, and
 	 * other things that should be handled in a standard way.
 	 *
-	 * @param checkRunBuilder
+	 * @param builder
 	 */
-	protected abstract void doRun(CheckRun.Builder checkRunBuilder) throws InterruptedException;
+	protected abstract void doRun(CheckRun.Builder builder) throws InterruptedException;
 
 }

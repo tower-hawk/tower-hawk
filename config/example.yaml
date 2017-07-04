@@ -1,7 +1,7 @@
 apps:
   zookeeper:
     alias: zk
-    cacheMs: 1000
+    cacheMs: 10000
     defaultCacheMs: 1000
     timeoutMs: 20000
     priority: 0
@@ -42,7 +42,7 @@ apps:
           sizeLimit: 20
   kafka:
     alias: messaging
-    cacheMs: 1000
+    cacheMs: 10000
     defaultCacheMs: 1000
     timeoutMs: 20000
     priority: 2
@@ -57,3 +57,8 @@ apps:
         port: 9092
         tags:
           - tcp
+  os:
+    cacheMs: 1000
+    checks:
+      system:
+        type: .type.System

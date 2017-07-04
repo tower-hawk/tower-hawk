@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.CheckRunAccumulator;
+import org.towerhawk.monitor.check.run.CheckRunAggregator;
 import org.towerhawk.monitor.check.run.CheckRunner;
 import org.towerhawk.spring.config.Configuration;
 
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 public class App extends AbstractCheck {
 
 	private Logger log = LoggerFactory.getLogger(this.getClass());
+	protected static CheckRunAggregator __aggregator = new CheckRunAggregator() {};
 	protected Map<String, Check> checks = new LinkedHashMap<>();
 	protected long defaultCacheMs;
 	protected long defaultTimeoutMs;
@@ -32,26 +35,10 @@ public class App extends AbstractCheck {
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder checkRunBuilder) {
+	protected void doRun(CheckRun.Builder builder) {
 		List<CheckRun> checkRuns = checkRunner.runChecks(checks.values());
-		//TODO aggregate checkRuns and add info to builder
-		List<CheckRun> filteredCheckRuns = null;
-		if ((filteredCheckRuns = checkRuns.stream().filter(r -> r.getStatus() == CheckRun.Status.CRITICAL).collect(Collectors.toList())).size() > 0) {
-			checkRunBuilder.critical();
-		} else if ((filteredCheckRuns = checkRuns.stream().filter(r -> r.getStatus() == CheckRun.Status.WARNING).collect(Collectors.toList())).size() > 0) {
-			checkRunBuilder.warning();
-		} else {
-			checkRunBuilder.succeeded();
-			checkRunBuilder.message("OK");
-		}
-		if (filteredCheckRuns != null) {
-			checkRunBuilder.message(
-				filteredCheckRuns.stream()
-					.filter(r -> r.getMessage() != null && !r.getMessage().isEmpty())
-					.map(checkRun -> checkRun.getCheck().getId() + ": " + checkRun.getMessage())
-					.collect(Collectors.joining(configuration.getLineDelimiter())));
-		}
-		checkRuns.forEach(checkRun -> checkRunBuilder.addContext(checkRun.getCheck().getId(), checkRun));
+		__aggregator.aggregate(builder, checkRuns, "OK", configuration.getLineDelimiter());
+		checkRuns.forEach(checkRun -> builder.addContext(checkRun.getCheck().getId(), checkRun));
 	}
 
 	@Override

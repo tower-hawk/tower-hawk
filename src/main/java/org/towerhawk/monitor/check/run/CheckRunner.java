@@ -8,6 +8,4 @@ import java.util.List;
 public interface CheckRunner {
 
 	List<CheckRun> runChecks(Collection<Check> checks);
-
-	CheckRunAccumulator runChecksAsync(Collection<Check> checks);
 }
