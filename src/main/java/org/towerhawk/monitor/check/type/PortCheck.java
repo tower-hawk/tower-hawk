@@ -32,6 +32,10 @@ public class PortCheck extends AbstractCheck {
 	private boolean matchIsCritical = true;
 	private boolean includeOutputInContext = false;
 
+	public PortCheck() {
+		setThreshold(SimpleNumericThreshold.builder().warnUpper(1000).critUpper(3000).build());
+	}
+
 	@Override
 	public void init(Check check, Configuration configuration, App app, String id) {
 		super.init(check, configuration, app, id);
@@ -40,9 +44,6 @@ public class PortCheck extends AbstractCheck {
 		}
 		if (localHost == null) {
 			localHost = configuration.getDefaultLocalHost();
-		}
-		if (threshold == null) {
-			threshold = SimpleNumericThreshold.builder().warnUpper(1000).critUpper(3000).build();
 		}
 	}
 

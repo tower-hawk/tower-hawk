@@ -12,8 +12,8 @@ import java.lang.management.ManagementFactory;
 public class SwapSpaceCheck extends AbstractCheck {
 
 	public SwapSpaceCheck() {
-		cacheMs = 0;
-		threshold = SimpleNumericThreshold.builder().warnUpper(0.6).critUpper(0.8).build();
+		setCacheMs(0);
+		setThreshold(SimpleNumericThreshold.builder().warnUpper(0.6).critUpper(0.8).build());
 	}
 
 	@Override
@@ -24,9 +24,11 @@ public class SwapSpaceCheck extends AbstractCheck {
 			long freeSwapSpace = os.getFreeSwapSpaceSize();
 			long totalSwapSpace = os.getTotalSwapSpaceSize();
 			if (totalSwapSpace > 0) {
-				getThreshold().evaluate(builder, freeSwapSpace / totalSwapSpace);
+				double percentSwapUsed = (freeSwapSpace / totalSwapSpace) * 100;
+				getThreshold().evaluate(builder, percentSwapUsed);
 				builder.addContext("freeSwapSpace", freeSwapSpace)
-					.addContext("totalSwapSpace", totalSwapSpace);
+					.addContext("totalSwapSpace", totalSwapSpace)
+					.addContext("percentSwapUsed", percentSwapUsed);
 			}
 		} else {
 			builder.message("Cannot get swap information from jvm");

@@ -18,8 +18,8 @@ public class SimpleNumericThreshold implements Threshold {
 
 	private NumericThresholdEvaluator warningThreshold;
 	private NumericThresholdEvaluator criticalThreshold;
-	private boolean addContext = false;
-	private boolean setMessage = false;
+	private boolean addContext = true;
+	private boolean setMessage = true;
 
 	public SimpleNumericThreshold(
 		NumericThresholdEvaluator warningThreshold,
@@ -46,7 +46,7 @@ public class SimpleNumericThreshold implements Threshold {
 	) {
 		this(new NumericThresholdEvaluator(warnLower, warnUpper, between, 0),
 			new NumericThresholdEvaluator(critLower, critUpper, between, 0),
-			false, false);
+			true, true);
 	}
 
 	public SimpleNumericThreshold(
@@ -98,6 +98,7 @@ public class SimpleNumericThreshold implements Threshold {
 			}
 			return CheckRun.Status.WARNING;
 		}
+		builder.succeeded();
 		return CheckRun.Status.SUCCEEDED;
 	}
 

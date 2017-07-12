@@ -32,13 +32,13 @@ public class CheckRunnerController {
 		this.configuration = configuration;
 	}
 
-	@RequestMapping(path = {"", "/", "/app", "/app/"}, method = {RequestMethod.GET})
+	@RequestMapping(method = {RequestMethod.GET})
 	public ResponseEntity<CheckRun> getRecentCheckServieRun(
 		@RequestParam(value = "fields", required = false) List<CheckRunSelector.Field> fields) {
 		return getCheckRunResponseEntity(monitorService, false, fields);
 	}
 
-	@RequestMapping(path = {"", "/", "/app", "/app/"}, method = {RequestMethod.POST})
+	@RequestMapping(method = {RequestMethod.POST})
 	public ResponseEntity<CheckRun> runCheckService(
 		@RequestParam(value = "fields", required = false) List<CheckRunSelector.Field> fields) {
 		return getCheckRunResponseEntity(monitorService, true, fields);
@@ -68,13 +68,26 @@ public class CheckRunnerController {
 		} else {
 			checkRun = app.getLastCheckRun();
 		}
+		int responseCode = getResponseCode(checkRun.getStatus());
 		checkRun = new CheckRunSelector(checkRun, fields, configuration);
-		HttpStatus status;
-		if (checkRun.getStatus() == CheckRun.Status.SUCCEEDED) {
-			status = HttpStatus.OK;
-		} else {
-			status = HttpStatus.SERVICE_UNAVAILABLE;
+		return ResponseEntity.status(responseCode).body(checkRun);
+	}
+
+	private int getResponseCode(CheckRun.Status status) {
+		int responseCode;
+		switch (status) {
+			case SUCCEEDED:
+				responseCode = configuration.getSucceededResponseCode();
+				break;
+			case UNKNOWN:
+				responseCode = configuration.getUnknownResponseCode();
+				break;
+			case WARNING:
+				responseCode = configuration.getWarningResponseCode();
+				break;
+			default:
+				responseCode = configuration.getCriticalResponseCode();
 		}
-		return new ResponseEntity<CheckRun>(checkRun, status);
+		return responseCode;
 	}
 }

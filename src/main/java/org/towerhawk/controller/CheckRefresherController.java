@@ -54,10 +54,4 @@ public class CheckRefresherController {
 	public void stopWatcher() {
 		checkWatcher.stop();
 	}
-
-	@RequestMapping(path = "/watcher")
-	public boolean watcherRunning() {
-		return checkWatcher.running();
-	}
-
 }

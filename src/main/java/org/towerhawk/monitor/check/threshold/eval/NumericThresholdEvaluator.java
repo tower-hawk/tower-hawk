@@ -20,9 +20,9 @@ public class NumericThresholdEvaluator {
 	private double upper = Double.MAX_VALUE;
 
 	@Getter(AccessLevel.NONE)
-	private String lowerDigits;
+	private transient String lowerDigits;
 	@Getter(AccessLevel.NONE)
-	private String upperDigits;
+	private transient String upperDigits;
 
 	public NumericThresholdEvaluator() {
 
@@ -65,18 +65,35 @@ public class NumericThresholdEvaluator {
 
 	public boolean evaluate(double value) {
 		if (between) {
-			return value >= lower && value <= upper;
+			return evalBetween(value);
 		} else {
-			return value < lower || value > upper;
+			return evalLower(value) || evalUpper(value);
 		}
 	}
 
+	private boolean evalBetween(double value) {
+		return value >= lower && value <= upper;
+	}
+
+	private boolean evalLower(double value) {
+		return value < lower;
+	}
+
+	private boolean evalUpper(double value) {
+		return value > upper;
+	}
+
 	public String evaluateReason(double value) {
-		if (between) {
+		if (between && evalBetween(value)) {
 			return String.format("%s is between %s and %s", round(value), lowerDigits, upperDigits);
 		} else {
-			return String.format("%s is < %s or > %s", round(value), lowerDigits, upperDigits);
+			if (evalLower(value)) {
+				return String.format("%s is < %s", round(value), lowerDigits);
+			} else if (evalUpper(value)) {
+				return String.format("%s is > %s", round(value), upperDigits);
+			}
 		}
+		return "";
 	}
 
 	private String round(double value) {

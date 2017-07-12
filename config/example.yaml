@@ -40,13 +40,9 @@ apps:
           - ps
         recentChecks:
           sizeLimit: 20
-      something:
-        type: jmx
+      heapSize:
+        type: javaheap
         port: 12181
-        mbean: java.lang:type=Memory
-        attribute: HeapMemoryUsage
-        path: used
-        basePath: max
         threshold:
           type: nagios
           warning: 80
@@ -60,6 +56,8 @@ apps:
     defaultCacheMs: 1000
     timeoutMs: 20000
     priority: 2
+    active:
+      type: disabled
     tags:
       - java
     checks:

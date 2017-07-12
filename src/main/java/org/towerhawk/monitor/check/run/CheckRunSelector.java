@@ -62,9 +62,13 @@ public class CheckRunSelector implements CheckRun {
 		if (includeContext || includeRecursiveCheckRun) {
 			if (checkRun.getContext() != null) {
 				context = new LinkedHashMap<>();
-				context = checkRun.getContext().entrySet().stream()
-					.filter(e -> includeContext || e.getValue() instanceof CheckRun)
-					.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() instanceof CheckRun ? new CheckRunSelector((CheckRun) e.getValue(), fieldSet, configuration) : e.getValue()));
+				//This keeps contexts in their same order and should be safe for non-concurrent maps like LinkedHashMap
+				checkRun.getContext().entrySet().stream().forEachOrdered(e -> {
+					if (includeContext || e.getValue() instanceof CheckRun) {
+						Object value = e.getValue() instanceof CheckRun ? new CheckRunSelector((CheckRun) e.getValue(), fieldSet, configuration) : e.getValue();
+						context.put(e.getKey(), value);
+					}
+				});
 				if (context.isEmpty()) {
 					context = null;
 				}

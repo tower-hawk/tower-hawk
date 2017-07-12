@@ -1,5 +1,6 @@
 package org.towerhawk.monitor.reader;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.towerhawk.monitor.MonitorService;
@@ -24,10 +25,10 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
+@Slf4j
 @Named
 public class CheckWatcher {
 
-	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	private WatchService watcher;
 	private final Map<WatchKey, Path> keys;
 	private final MonitorService service;
@@ -69,7 +70,7 @@ public class CheckWatcher {
 			log.debug("Starting CheckWatcher");
 			keepWatching = true;
 			executor = Executors.newSingleThreadExecutor();
-			runningTask = executor.submit(() -> processEvents());
+			runningTask = executor.submit(this::processEvents);
 		}
 	}
 

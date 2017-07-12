@@ -30,14 +30,14 @@ public class App extends AbstractCheck {
 	protected CheckRunner checkRunner;
 
 	public App() {
-		type = "app";
-		cacheMs = 0;
+		setType("app");
+		setCacheMs(0);
 	}
 
 	@Override
 	protected void doRun(CheckRun.Builder builder) {
 		List<CheckRun> checkRuns = checkRunner.runChecks(checks.values());
-		aggregator.aggregate(builder, checkRuns, "OK", configuration.getLineDelimiter());
+		aggregator.aggregate(builder, checkRuns, "OK", getConfiguration().getLineDelimiter());
 		checkRuns.forEach(checkRun -> builder.addContext(checkRun.getCheck().getId(), checkRun));
 	}
 

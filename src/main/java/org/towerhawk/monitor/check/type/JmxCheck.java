@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
@@ -24,6 +25,7 @@ import java.util.Map;
 @Slf4j
 @Getter(AccessLevel.PROTECTED)
 @Setter(AccessLevel.PROTECTED)
+@Accessors(chain = true)
 @CheckType("jmx")
 public class JmxCheck extends AbstractCheck {
 
@@ -60,9 +62,7 @@ public class JmxCheck extends AbstractCheck {
 	@Override
 	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
 		try {
-			if (System.currentTimeMillis() - connectionCreation > getConfiguration().getJMXConnectionRefreshMs()) {
-				refreshConnection();
-			}
+			maybeRefreshConnection();
 			// now query to get the beans or whatever
 			Object attributeResult = getValueFromPath(mbeanConn.getAttribute(mbean, attribute), path);
 			Object baseAttributeResult = null;
@@ -82,16 +82,20 @@ public class JmxCheck extends AbstractCheck {
 				builder.unknown().error(e);
 				log.error("Unable to evaluate threshold for {} of class {}", attributeResult, attributeResult.getClass(), e);
 			}
-
-
 		} catch (Exception e) {
 			log.error("Error while communicating with server {}", url, e);
 			builder.critical().error(e);
 		}
 	}
 
+	private void maybeRefreshConnection() {
+		if (System.currentTimeMillis() - connectionCreation > getConfiguration().getJMXConnectionRefreshMs()) {
+			refreshConnection();
+		}
+	}
+
 	private Object getValueFromPath(Object attributeResult, String path) {
-		if (path == null) {
+		if (path == null || path.isEmpty()) {
 			return attributeResult;
 		}
 		Object attributePathResult = null;
@@ -103,7 +107,9 @@ public class JmxCheck extends AbstractCheck {
 			attributePathResult = map.get(path);
 		}
 		if (attributePathResult == null) {
-			throw new RuntimeException("Path " + path + " could not be found");
+			RuntimeException e = new RuntimeException("Path " + path + " could not be found");
+			log.warn("Unable to find path", e);
+			throw e;
 		}
 		return attributePathResult;
 	}
@@ -122,6 +128,7 @@ public class JmxCheck extends AbstractCheck {
 	protected final void refreshConnection() {
 		closeConnection();
 		createConnection();
+		connectionCreation = System.currentTimeMillis();
 	}
 
 	protected final void closeConnection() {
@@ -202,12 +209,12 @@ public class JmxCheck extends AbstractCheck {
 	}
 
 	@SneakyThrows
-	private void setMbean(String name) {
+	protected void setMbean(String name) {
 		this.mbean = new ObjectName(name);
 	}
 
 	@SneakyThrows
-	private void setBaseMbean(String name) {
+	protected void setBaseMbean(String name) {
 		this.baseMbean = new ObjectName(name);
 	}
 

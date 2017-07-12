@@ -38,35 +38,35 @@ public class MonitorService extends App {
 		, ExecutorService checkRunService
 		, ExecutorService appRunService) {
 		//Require configuration so Spring starts it up after the config is available
-		this.configuration = configuration;
+		setConfiguration(configuration);
 		CheckRunner appRunner = new ConcurrentCheckRunner(interruptor, appRunService);
 		setCheckRunner(appRunner);
 		checkRunnerForChecks = new ConcurrentCheckRunner(interruptor, checkRunService);
-		type = "CheckService";
+		setType("CheckService");
 	}
 
 	@PostConstruct
 	public void postConstruct() {
-		init(null, configuration, this, "monitorService");
+		init(null, getConfiguration(), this, "monitorService");
 
 		boolean refreshed = refreshDefinitions();
-		if (!refreshed && configuration.isShutdownOnInitializationFailure()) {
+		if (!refreshed && getConfiguration().isShutdownOnInitializationFailure()) {
 			log.error("##################################################################");
 			log.error("##########  Unable to initialize checks. Shutting down  ##########");
 			log.error("##################################################################");
 			System.exit(1);
 		}
-		if (refreshed && configuration.isRunChecksOnStartup() && !configuration.isRunChecksOnRefresh()) {
+		if (refreshed && getConfiguration().isRunChecksOnStartup() && !getConfiguration().isRunChecksOnRefresh()) {
 			run();
 		}
 	}
 
 	public boolean refreshDefinitions() {
 		try {
-			CheckDeserializer newDefs = new CheckRefresher(configuration.getCheckDefinitionDir()).readDefinitions();
+			CheckDeserializer newDefs = new CheckRefresher(getConfiguration().getCheckDefinitionDir()).readDefinitions();
 			postProcess(newDefs);
 			checks = Collections.unmodifiableMap(newDefs.getApps());
-			if (configuration.isRunChecksOnRefresh()) {
+			if (getConfiguration().isRunChecksOnRefresh()) {
 				run();
 			}
 			lastRefresh = ZonedDateTime.now();
@@ -87,9 +87,9 @@ public class MonitorService extends App {
 
 	@Override
 	public void init(Check check, Configuration configuration, App app, String id) {
-		cacheMs = 0;
-		timeoutMs = 0;
-		priority = Integer.MAX_VALUE;
+		setCacheMs(0);
+		setTimeoutMs(0);
+		setPriority(Integer.MAX_VALUE);
 		setActive(new Enabled());
 		super.init(check, configuration, app, id);
 	}
@@ -105,7 +105,7 @@ public class MonitorService extends App {
 		checkDeserializer.getApps().forEach((id, app) -> {
 			app.setCheckRunner(checkRunnerForChecks);
 			Check previousApp = checks.get(app.getId());
-			app.init(previousApp, configuration, this, id);
+			app.init(previousApp, getConfiguration(), this, id);
 			if (previousApp != null) {
 				appsToClose.add(previousApp);
 			}

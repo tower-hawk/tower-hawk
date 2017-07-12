@@ -18,7 +18,7 @@ import java.util.Map;
 @Slf4j
 public abstract class AbstractTypeResolver extends TypeIdResolverBase {
 
-	private static Map<Class, Map<String, JavaType>> types = new HashMap<>();
+	private static Map<Class<? extends Annotation>, Map<String, JavaType>> types = new HashMap<>();
 
 	private Map<String, JavaType> getTypes() {
 		return types.get(getAnnotationType());
@@ -47,7 +47,7 @@ public abstract class AbstractTypeResolver extends TypeIdResolverBase {
 				Class<?> clazz = Class.forName(bd.getBeanClassName());
 				String type = getType(clazz);
 				if (getTypes().get(type) == null) {
-					log.info("Mapping type {} to class {}", type, clazz.getCanonicalName());
+					log.info("Mapping type {}.{} to class {}", getAnnotationType().getSimpleName(), type, clazz.getCanonicalName());
 					JavaType javaType = TypeFactory.defaultInstance().constructSimpleType(clazz, null);
 					getTypes().put(type, javaType);
 				}

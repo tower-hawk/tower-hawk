@@ -2,6 +2,7 @@ package org.towerhawk.monitor.check.impl;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.active.Active;
 import org.towerhawk.monitor.active.Enabled;
@@ -28,25 +29,31 @@ import java.util.stream.Collectors;
 @Getter
 public abstract class AbstractCheck implements Check {
 
-	protected String type;
+	@Setter
+	private String type;
 	private String id = null;
-	protected long runEndTimestamp = 0;
-	protected long runStartTimestamp = 0;
-	protected long cacheMs = Check.CACHE_MS;
-	protected long timeoutMs = Check.TIMEOUT_MS;
-	protected int priority = Check.PRIORITY;
-	protected ZonedDateTime failingSince = null;
-	protected String alias = null;
+	private long runEndTimestamp = 0;
+	private long runStartTimestamp = 0;
+	@Setter
+	private long cacheMs = Check.CACHE_MS;
+	@Setter
+	private long timeoutMs = Check.TIMEOUT_MS;
+	@Setter
+	private int priority = Check.PRIORITY;
+	private ZonedDateTime failingSince = null;
+	private String alias = null;
 	private App app = null;
-	protected Set<String> tags = new LinkedHashSet<>();
+	private Set<String> tags = new LinkedHashSet<>();
 	private Active active = new Enabled();
 	private RecentCheckRun recentCheckRuns = new RecentCheckRun();
 	private boolean running = false;
 	private boolean unknownIsCritical = true;
-	protected Configuration configuration;
+	@Setter
+	private Configuration configuration;
 	private boolean initialized = false;
 	private CheckRun.Builder builder = null;
-	protected Threshold threshold;
+	@Setter
+	private Threshold threshold;
 
 	@Override
 	public final boolean isActive() {

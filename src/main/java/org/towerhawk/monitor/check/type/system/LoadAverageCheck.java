@@ -18,8 +18,8 @@ public class LoadAverageCheck extends AbstractCheck {
 	boolean loadRatio = true;
 
 	public LoadAverageCheck() {
-		cacheMs = 0;
-		threshold = SimpleNumericThreshold.builder().warnUpper(2).critUpper(4).build();
+		setCacheMs(0);
+		setThreshold(SimpleNumericThreshold.builder().warnUpper(2).critUpper(4).build());
 	}
 
 	@Override
@@ -27,7 +27,13 @@ public class LoadAverageCheck extends AbstractCheck {
 		builder.succeeded();
 		java.lang.management.OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
 		double loadAverage = os.getSystemLoadAverage();
-		getThreshold().evaluate(builder, loadAverage);
-		builder.addContext("loadAverage", loadAverage).addContext("availableProcessors", availableProcs);
+		double loadAverageCalc = loadAverage;
+		if (loadRatio) {
+			loadAverageCalc = loadAverage / availableProcs;
+		}
+		getThreshold().evaluate(builder, loadAverageCalc);
+		builder.addContext("loadAverage", loadAverage)
+			.addContext("availableProcessors", availableProcs)
+			.addContext("useLoadRatio", loadRatio);
 	}
 }

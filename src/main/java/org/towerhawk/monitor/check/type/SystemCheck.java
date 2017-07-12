@@ -40,17 +40,17 @@ public class SystemCheck extends AbstractCheck {
 	private InternalSwapSpaceCheck swapSpace = null;
 
 	public SystemCheck() {
-		cacheMs = 0;
+		setCacheMs(0);
 	}
 
 	@Override
 	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
 		List<CheckRun> checkRuns = checkRunner.runChecks(checks.values());
-		aggregator.aggregate(builder, checkRuns, "OK", configuration.getLineDelimiter());
-		checkRuns.forEach(c -> {
+		aggregator.aggregate(builder, checkRuns, "OK", getConfiguration().getLineDelimiter());
+		checkRuns.stream().forEachOrdered(c -> {
 			Map<String, Object> context = c.getContext();
 			if (context != null) {
-				context.forEach((k, v) -> builder.addContext(k, v));
+				context.entrySet().stream().forEachOrdered(e -> builder.addContext(e.getKey(), e.getValue()));
 			}
 		});
 	}

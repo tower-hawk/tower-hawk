@@ -12,8 +12,8 @@ import java.lang.management.ManagementFactory;
 public class PhysicalMemoryCheck extends AbstractCheck {
 
 	public PhysicalMemoryCheck() {
-		cacheMs = 0;
-		threshold = SimpleNumericThreshold.builder().warnUpper(0.9).critUpper(0.95).build();
+		setCacheMs(0);
+		setThreshold(SimpleNumericThreshold.builder().warnUpper(90).critUpper(95).build());
 	}
 
 	@Override
@@ -23,11 +23,14 @@ public class PhysicalMemoryCheck extends AbstractCheck {
 			OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 			double freePhysicalMemory = os.getFreePhysicalMemorySize();
 			double totalPhysicalMemory = os.getTotalPhysicalMemorySize();
-			getThreshold().evaluate(builder, freePhysicalMemory / totalPhysicalMemory);
+			os.getCommittedVirtualMemorySize()
+			double percentUsed = (1 - (freePhysicalMemory / totalPhysicalMemory)) * 100;
+			getThreshold().evaluate(builder, percentUsed);
 			builder.addContext("freePhysicalMemory", freePhysicalMemory)
-				.addContext("totalPhysicalMemory", totalPhysicalMemory);
+				.addContext("totalPhysicalMemory", totalPhysicalMemory)
+				.addContext("percentMemoryUsed", percentUsed);
 		} else {
-			builder.addContext("swapSpace", "Cannot get swap information from jvm");
+			builder.addContext("swapSpace", "Cannot get memory usage information from jvm");
 		}
 	}
 }

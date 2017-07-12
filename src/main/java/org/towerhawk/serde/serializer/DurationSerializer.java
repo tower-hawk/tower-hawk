@@ -11,7 +11,7 @@ import java.time.Duration;
 
 public class DurationSerializer extends StdSerializer<Duration> {
 
-	Configuration configuration;
+	private Configuration configuration;
 
 	public DurationSerializer(Configuration configuration) {
 		super(Duration.class);

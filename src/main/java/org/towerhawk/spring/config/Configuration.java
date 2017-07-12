@@ -58,6 +58,11 @@ public class Configuration {
 	private String mbeanPathSeparator = "|";
 	private List<CheckRunSelector.Field> checkRunDefaultFields = null;
 	private long JMXConnectionRefreshMs = 600000;
+	private int doubleSerializationPrecision = 4;
+	private int succeededResponseCode = 200;
+	private int unknownResponseCode = 520;
+	private int warningResponseCode = 530;
+	private int criticalResponseCode = 540;
 
 	public void setCheckRunDefaultFields(List<CheckRunSelector.Field> checkRunDefaultFields) {
 		this.checkRunDefaultFields = checkRunDefaultFields;
