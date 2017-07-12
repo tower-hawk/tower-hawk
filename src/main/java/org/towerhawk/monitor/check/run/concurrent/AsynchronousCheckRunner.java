@@ -6,7 +6,7 @@ import org.towerhawk.monitor.check.run.CheckRunner;
 
 import java.util.Collection;
 
-public interface AsynchronousCheckRunner extends CheckRunner{
+public interface AsynchronousCheckRunner extends CheckRunner {
 
 	CheckRunAccumulator runChecksAsync(Collection<Check> checks);
 }

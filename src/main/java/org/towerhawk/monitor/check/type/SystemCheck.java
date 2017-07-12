@@ -29,9 +29,15 @@ public class SystemCheck extends AbstractCheck {
 	private CheckRunAggregator aggregator = new DefaultCheckRunAggregator();
 	private CheckRunner checkRunner = new SynchronousCheckRunner();
 	private Map<String, Check> checks = new LinkedHashMap<>(3);
-	@Getter	@Setter	private InternalLoadAverageCheck loadAverage = null;
-	@Getter	@Setter	private InternalPhysicalMemoryCheck physicalMemory = null;
-	@Getter	@Setter	private InternalSwapSpaceCheck swapSpace = null;
+	@Getter
+	@Setter
+	private InternalLoadAverageCheck loadAverage = null;
+	@Getter
+	@Setter
+	private InternalPhysicalMemoryCheck physicalMemory = null;
+	@Getter
+	@Setter
+	private InternalSwapSpaceCheck swapSpace = null;
 
 	public SystemCheck() {
 		cacheMs = 0;
@@ -67,7 +73,7 @@ public class SystemCheck extends AbstractCheck {
 		checks.forEach((k, v) -> {
 			Check c = null;
 			if (check instanceof SystemCheck) {
-				c = ((SystemCheck)check).checks.get(k);
+				c = ((SystemCheck) check).checks.get(k);
 			}
 			v.init(c, configuration, getApp(), getId() + "-" + k);
 		});

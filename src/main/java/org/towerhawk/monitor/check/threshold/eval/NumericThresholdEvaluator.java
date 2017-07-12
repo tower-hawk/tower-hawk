@@ -19,8 +19,10 @@ public class NumericThresholdEvaluator {
 	private double lower = -Double.MAX_VALUE;
 	private double upper = Double.MAX_VALUE;
 
-	@Getter(AccessLevel.NONE) private String lowerDigits;
-	@Getter(AccessLevel.NONE) private String upperDigits;
+	@Getter(AccessLevel.NONE)
+	private String lowerDigits;
+	@Getter(AccessLevel.NONE)
+	private String upperDigits;
 
 	public NumericThresholdEvaluator() {
 

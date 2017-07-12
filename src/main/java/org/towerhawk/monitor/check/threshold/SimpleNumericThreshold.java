@@ -21,7 +21,7 @@ public class SimpleNumericThreshold implements Threshold {
 	private boolean addContext = false;
 	private boolean setMessage = false;
 
-	public SimpleNumericThreshold (
+	public SimpleNumericThreshold(
 		NumericThresholdEvaluator warningThreshold,
 		NumericThresholdEvaluator criticalThreshold
 	) {
@@ -116,7 +116,7 @@ public class SimpleNumericThreshold implements Threshold {
 	public CheckRun.Status evaluate(CheckRun.Builder builder, Object value) {
 		try {
 			if (value instanceof Number) {
-				double val = ((Number)value).doubleValue();
+				double val = ((Number) value).doubleValue();
 				return evaluate(builder, val);
 			} else {
 				return evaluate(builder, value.toString());

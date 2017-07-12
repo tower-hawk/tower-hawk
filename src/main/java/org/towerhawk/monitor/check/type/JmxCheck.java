@@ -120,8 +120,8 @@ public class JmxCheck extends AbstractCheck {
 	}
 
 	protected final void refreshConnection() {
-			closeConnection();
-			createConnection();
+		closeConnection();
+		createConnection();
 	}
 
 	protected final void closeConnection() {

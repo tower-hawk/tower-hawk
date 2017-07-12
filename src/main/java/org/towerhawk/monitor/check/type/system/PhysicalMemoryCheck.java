@@ -9,7 +9,7 @@ import org.towerhawk.serde.resolver.CheckType;
 import java.lang.management.ManagementFactory;
 
 @CheckType("physicalMemory")
-public class PhysicalMemoryCheck extends AbstractCheck{
+public class PhysicalMemoryCheck extends AbstractCheck {
 
 	public PhysicalMemoryCheck() {
 		cacheMs = 0;

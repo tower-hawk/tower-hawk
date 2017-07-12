@@ -13,9 +13,12 @@ import java.util.List;
 @Accessors(chain = true)
 public class RecentCheckRun {
 
-	@Getter	private int sizeLimit;
+	@Getter
+	private int sizeLimit;
 	private Deque<CheckRun> recentCheckRuns;
-	@Getter	@Setter	private CheckRun defaultCheckRun;
+	@Getter
+	@Setter
+	private CheckRun defaultCheckRun;
 
 	public RecentCheckRun() {
 		this.sizeLimit = 10;

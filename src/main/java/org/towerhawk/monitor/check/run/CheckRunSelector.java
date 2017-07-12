@@ -64,7 +64,7 @@ public class CheckRunSelector implements CheckRun {
 				context = new LinkedHashMap<>();
 				context = checkRun.getContext().entrySet().stream()
 					.filter(e -> includeContext || e.getValue() instanceof CheckRun)
-					.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() instanceof CheckRun ? new CheckRunSelector((CheckRun)e.getValue(), fieldSet, configuration) : e.getValue()));
+					.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() instanceof CheckRun ? new CheckRunSelector((CheckRun) e.getValue(), fieldSet, configuration) : e.getValue()));
 				if (context.isEmpty()) {
 					context = null;
 				}

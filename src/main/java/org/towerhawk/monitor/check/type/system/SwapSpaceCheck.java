@@ -9,7 +9,7 @@ import org.towerhawk.serde.resolver.CheckType;
 import java.lang.management.ManagementFactory;
 
 @CheckType("swapSpace")
-public class SwapSpaceCheck extends AbstractCheck{
+public class SwapSpaceCheck extends AbstractCheck {
 
 	public SwapSpaceCheck() {
 		cacheMs = 0;

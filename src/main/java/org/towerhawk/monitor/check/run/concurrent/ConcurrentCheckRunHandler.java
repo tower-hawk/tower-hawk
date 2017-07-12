@@ -3,8 +3,6 @@ package org.towerhawk.monitor.check.run.concurrent;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.run.CheckRun;
 
@@ -15,7 +13,8 @@ import java.util.concurrent.Future;
 @Slf4j
 class ConcurrentCheckRunHandler implements Callable<CheckRun>, Comparable<ConcurrentCheckRunHandler> {
 
-	@Getter private Check check;
+	@Getter
+	private Check check;
 	private ConcurrentCheckRunAccumulator accumulator;
 	private ConcurrentCheckInterruptor interruptor;
 	private Future<CheckRun> checkRunFuture = null;

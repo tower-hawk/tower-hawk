@@ -32,7 +32,7 @@ public class NagiosSyntaxThresholdTest {
 		expected.put(15, WARNING);
 		expected.put(25, CRITICAL);
 		evaluateMultiple(threshold, expected);
-		threshold = new NagiosSyntaxThreshold("30:","25:");
+		threshold = new NagiosSyntaxThreshold("30:", "25:");
 		expected.put(35, SUCCEEDED);
 		expected.put(28, WARNING);
 		expected.put(23, CRITICAL);

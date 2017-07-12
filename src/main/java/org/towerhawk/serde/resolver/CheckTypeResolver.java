@@ -11,7 +11,7 @@ public class CheckTypeResolver extends AbstractTypeResolver {
 
 	@Override
 	protected String getType(Class c) {
-		CheckType type = (CheckType)c.getAnnotation(CheckType.class);
+		CheckType type = (CheckType) c.getAnnotation(CheckType.class);
 		return type.value();
 	}
 }

@@ -1,7 +1,7 @@
 package org.towerhawk.monitor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.active.Enabled;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
@@ -16,23 +16,27 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 
+@Slf4j
 @Named
 public class MonitorService extends App {
 
-	private final Logger log = LoggerFactory.getLogger(this.getClass());
-
 	private final CheckRunner checkRunnerForChecks;
+	@Getter
+	private ZonedDateTime lastRefresh = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
 
 	@Inject
 	public MonitorService(Configuration configuration
 		, ConcurrentCheckInterruptor interruptor
 		, ExecutorService checkRunService
-	  , ExecutorService appRunService) {
+		, ExecutorService appRunService) {
 		//Require configuration so Spring starts it up after the config is available
 		this.configuration = configuration;
 		CheckRunner appRunner = new ConcurrentCheckRunner(interruptor, appRunService);
@@ -65,6 +69,7 @@ public class MonitorService extends App {
 			if (configuration.isRunChecksOnRefresh()) {
 				run();
 			}
+			lastRefresh = ZonedDateTime.now();
 		} catch (RuntimeException e) {
 			log.error("Failed to load new checks", e);
 			return false;

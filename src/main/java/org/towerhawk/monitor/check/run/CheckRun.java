@@ -113,7 +113,7 @@ public interface CheckRun extends Comparable<CheckRun> {
 	 */
 	default int compareTo(CheckRun c) {
 		//return ordinal to sort by status and if equal
-		if(c.getStatus() == null || getStatus() == null) {
+		if (c.getStatus() == null || getStatus() == null) {
 			return -1;
 		}
 		int sort = Integer.compare(getStatus().getOrdinal(), c.getStatus().getOrdinal());

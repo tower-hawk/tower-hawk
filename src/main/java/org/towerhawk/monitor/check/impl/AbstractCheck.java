@@ -119,7 +119,7 @@ public abstract class AbstractCheck implements Check {
 				log.debug("Check {} is already running", getId());
 			} else if (!initialized) {
 				log.warn("Trying to run check {} but it is not initialized", getId());
-			}	else if (!isActive()) {
+			} else if (!isActive()) {
 				log.debug("Check {} is not active", getId());
 				CheckRun lastRun = recentCheckRuns.getLastRun();
 				if (lastRun.getStatus() != CheckRun.Status.SUCCEEDED) {

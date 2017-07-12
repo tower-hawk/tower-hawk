@@ -26,7 +26,7 @@ public class NagiosSyntaxThreshold extends SimpleNumericThreshold {
 
 	/**
 	 * As referenced from the nagios documentation at:
-	 *     https://nagios-plugins.org/doc/guidelines.html#THRESHOLDFORMAT
+	 * https://nagios-plugins.org/doc/guidelines.html#THRESHOLDFORMAT
 	 *
 	 * "10"	      < 0 or > 10, (outside the range of {0 .. 10})
 	 * "10:"	    < 10, (outside {10 .. ∞})
