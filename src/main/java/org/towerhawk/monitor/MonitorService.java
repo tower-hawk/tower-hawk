@@ -9,7 +9,6 @@ import org.towerhawk.monitor.check.run.CheckRunner;
 import org.towerhawk.monitor.check.run.concurrent.ConcurrentCheckInterruptor;
 import org.towerhawk.monitor.check.run.concurrent.ConcurrentCheckRunner;
 import org.towerhawk.monitor.reader.CheckDeserializer;
-import org.towerhawk.monitor.reader.CheckPostProcessor;
 import org.towerhawk.monitor.reader.CheckRefresher;
 import org.towerhawk.spring.config.Configuration;
 
@@ -44,7 +43,7 @@ public class MonitorService extends App {
 
 	@PostConstruct
 	public void postConstruct() {
-		init(null, configuration);
+		init(null, configuration, this, "monitorService");
 
 		boolean refreshed = refreshDefinitions();
 		if (!refreshed && configuration.isShutdownOnInitializationFailure()) {
@@ -82,14 +81,12 @@ public class MonitorService extends App {
 	}
 
 	@Override
-	public void init(Check check, Configuration configuration) {
-		setId("monitorService");
-		setApp(this);
+	public void init(Check check, Configuration configuration, App app, String id) {
 		cacheMs = 0;
 		timeoutMs = 0;
 		priority = Integer.MAX_VALUE;
-		setActiveCheck(new Enabled());
-		super.init(check, configuration);
+		setActive(new Enabled());
+		super.init(check, configuration, app, id);
 	}
 
 	@Override
@@ -101,11 +98,9 @@ public class MonitorService extends App {
 		Collection<Check> appsToClose = new ArrayList<>();
 		//initialize all checks first
 		checkDeserializer.getApps().forEach((id, app) -> {
-			app.setId(id);
-			app.setApp(this);
 			app.setCheckRunner(checkRunnerForChecks);
 			Check previousApp = checks.get(app.getId());
-			app.init(previousApp, configuration);
+			app.init(previousApp, configuration, this, id);
 			if (previousApp != null) {
 				appsToClose.add(previousApp);
 			}

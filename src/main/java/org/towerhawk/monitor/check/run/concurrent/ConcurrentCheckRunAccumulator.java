@@ -1,7 +1,6 @@
 package org.towerhawk.monitor.check.run.concurrent;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunAccumulator;
@@ -16,19 +15,28 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+@Slf4j
 class ConcurrentCheckRunAccumulator implements CheckRunAccumulator {
 
-	private Logger log = LoggerFactory.getLogger(ConcurrentCheckRunAccumulator.class);
-	private Collection<CheckRun> checkRuns = new ConcurrentSkipListSet<CheckRun>();
+	private Collection<CheckRun> checkRuns = new ConcurrentSkipListSet<>();
 	private Set<Check> checkSet = new LinkedHashSet<>();
 	private CountDownLatch latch;
 	private Collection<ConcurrentCheckRunHandler> handlers = new ConcurrentLinkedQueue<>();
 
 	public void accumulate(CheckRun checkRun) {
 		log.debug("Accumulating CheckRun for {}", checkRun.getCheck().getId());
-		checkRuns.add(checkRun);
-		latch.countDown();
+		// Can throw a null-pointer exception that is difficult to track down
+		// since the main thread can end up waiting on this forever.
+		try {
+			checkRuns.add(checkRun);
+		} catch (Exception e) {
+			log.error("Unable to accumulate check {}", checkRun.getCheck().getId());
+		} finally {
+			latch.countDown();
+		}
 	}
 
 	public ConcurrentCheckRunAccumulator(Collection<Check> checks) {
@@ -39,7 +47,12 @@ class ConcurrentCheckRunAccumulator implements CheckRunAccumulator {
 	@Override
 	public List<CheckRun> waitForChecks() throws InterruptedException {
 		log.debug("Waiting for checks");
-		latch.await();
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			log.warn("Got interrupted waiting for checks {} to complete", checkSet.stream().map(Check::getId).collect(Collectors.toList()));
+			cancelChecks();
+		}
 		return getChecks();
 	}
 
@@ -55,15 +68,15 @@ class ConcurrentCheckRunAccumulator implements CheckRunAccumulator {
 		handlers.add(handler);
 	}
 
+	@Override
 	public void cancelChecks() {
-		handlers.forEach(h -> {
-			try {
-				Future<CheckRun> future = h.getCheckRunFuture();
-				future.cancel(true);
-			} catch (InterruptedException e) {
-				log.warn("Got interrupted trying to cancel futures");
-			}
-		});
+		handlers.forEach(ConcurrentCheckRunHandler::cancel);
+		//Give each of the handlers a grace period to clean up and accumulate
+		try {
+			latch.await(1000, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			log.warn("Got interrupted waiting for futures to finish during grace period");
+		}
 	}
 
 }

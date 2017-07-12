@@ -1,47 +1,37 @@
 package org.towerhawk.monitor.check.type.system;
 
-import org.towerhawk.jackson.resolver.CheckType;
+import lombok.Getter;
+import lombok.Setter;
+import org.towerhawk.monitor.app.App;
+import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
+import org.towerhawk.monitor.check.threshold.eval.NumericThresholdEvaluator;
+import org.towerhawk.serde.resolver.CheckType;
+import org.towerhawk.spring.config.Configuration;
 
 import java.lang.management.ManagementFactory;
 
 @CheckType("loadAverage")
-public class LoadAverage extends AbstractCheck{
+public class LoadAverage extends AbstractCheck {
 
 	private int availableProcs = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
-	private double ratioWarning = 2;
-	private double ratioCritical = 4;
+	@Getter
+	@Setter
+	boolean loadRatio = true;
+
+	public LoadAverage() {
+		cacheMs = 0;
+		threshold = SimpleNumericThreshold.builder().warnUpper(2).critUpper(4).build();
+	}
 
 	@Override
 	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
 		builder.succeeded();
-		java.lang.management.OperatingSystemMXBean os =  ManagementFactory.getOperatingSystemMXBean();
+		java.lang.management.OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
 		double loadAverage = os.getSystemLoadAverage();
-		double loadAverageRatio = loadAverage / availableProcs;
-		if (loadAverageRatio > ratioCritical) {
-			builder.critical();
-			builder.message(String.valueOf(loadAverage) + " > " + String.valueOf(availableProcs * ratioCritical));
-		} else if (loadAverageRatio > ratioWarning) {
-			builder.warning();
-			builder.message(String.valueOf(loadAverage) + " > " + String.valueOf(availableProcs * ratioWarning));
-		}
+		getThreshold().evaluate(builder, loadAverage);
 		builder.addContext("loadAverage", loadAverage).addContext("availableProcessors", availableProcs);
-	}
-
-	public double getRatioWarning() {
-		return ratioWarning;
-	}
-
-	public void setRatioWarning(double ratioWarning) {
-		this.ratioWarning = ratioWarning;
-	}
-
-	public double getRatioCritical() {
-		return ratioCritical;
-	}
-
-	public void setRatioCritical(double ratioCritical) {
-		this.ratioCritical = ratioCritical;
 	}
 }

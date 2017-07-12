@@ -19,7 +19,7 @@ apps:
         expectRegex: imok
         includeOutputInContext: true
         activeCheck:
-          type: .DailyScheduleActive
+          type: daily
           startTime: 09:00:59.234567891
           endTime: 17:00:03.345678901
           timeFormat: HH:mm:ss.SSSSSSSSS
@@ -40,6 +40,20 @@ apps:
           - ps
         recentChecks:
           sizeLimit: 20
+      something:
+        type: jmx
+        port: 12181
+        mbean: java.lang:type=Memory
+        attribute: HeapMemoryUsage
+        path: used
+        basePath: max
+        threshold:
+          type: nagios
+          warning: 80
+          critical: 90
+          addContext: true
+          setMessage: true
+          precision: 0
   kafka:
     alias: messaging
     cacheMs: 10000
@@ -55,10 +69,22 @@ apps:
         priority: 2
         timeoutMs: 1000
         port: 9092
+        threshold:
+          warning:
+            upper: 200
+          critical:
+            upper: 500
+          addContext: true
+          setMessage: true
         tags:
           - tcp
   os:
-    cacheMs: 1000
     checks:
       system:
         type: system
+        loadAverage:
+          threshold:
+            type: nagios
+            warning: ~:0
+            critical: ~:1
+            setMessage: true

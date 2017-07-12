@@ -1,17 +1,20 @@
 package org.towerhawk.monitor.check.type.system;
 
 import com.sun.management.OperatingSystemMXBean;
-import org.towerhawk.jackson.resolver.CheckType;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
+import org.towerhawk.serde.resolver.CheckType;
 
 import java.lang.management.ManagementFactory;
 
 @CheckType("swapSpace")
 public class SwapSpace extends AbstractCheck{
 
-	private double percentWarning = 0.7;
-	private double percentCritical = 0.9;
+	public SwapSpace() {
+		cacheMs = 0;
+		threshold = SimpleNumericThreshold.builder().warnUpper(0.6).critUpper(0.8).build();
+	}
 
 	@Override
 	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
@@ -21,35 +24,12 @@ public class SwapSpace extends AbstractCheck{
 			long freeSwapSpace = os.getFreeSwapSpaceSize();
 			long totalSwapSpace = os.getTotalSwapSpaceSize();
 			if (totalSwapSpace > 0) {
-				double swapSpaceRatio = freeSwapSpace / totalSwapSpace;
-				if (swapSpaceRatio > percentCritical) {
-					builder.critical();
-					builder.message(String.valueOf(swapSpaceRatio) + " > " + String.valueOf(percentCritical));
-				} else if (swapSpaceRatio > percentWarning) {
-					builder.warning();
-					builder.message(String.valueOf(swapSpaceRatio) + " > " + String.valueOf(percentWarning));
-				}
+				getThreshold().evaluate(builder, freeSwapSpace / totalSwapSpace);
 				builder.addContext("freeSwapSpace", freeSwapSpace)
 					.addContext("totalSwapSpace", totalSwapSpace);
 			}
 		} else {
 			builder.message("Cannot get swap information from jvm");
 		}
-	}
-
-	public double getPercentWarning() {
-		return percentWarning;
-	}
-
-	public void setPercentWarning(double percentWarning) {
-		this.percentWarning = percentWarning;
-	}
-
-	public double getPercentCritical() {
-		return percentCritical;
-	}
-
-	public void setPercentCritical(double percentCritical) {
-		this.percentCritical = percentCritical;
 	}
 }

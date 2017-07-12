@@ -1,16 +1,20 @@
 package org.towerhawk.monitor.check.type.system;
 
 import com.sun.management.OperatingSystemMXBean;
-import org.towerhawk.jackson.resolver.CheckType;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
+import org.towerhawk.serde.resolver.CheckType;
 
 import java.lang.management.ManagementFactory;
 
 @CheckType("physicalMemory")
 public class PhysicalMemory extends AbstractCheck{
-	private double percentWarning = 0.95;
-	private double percentCritical = 0.99;
+
+	public PhysicalMemory() {
+		cacheMs = 0;
+		threshold = SimpleNumericThreshold.builder().warnUpper(0.9).critUpper(0.95).build();
+	}
 
 	@Override
 	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
@@ -19,34 +23,11 @@ public class PhysicalMemory extends AbstractCheck{
 			OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 			double freePhysicalMemory = os.getFreePhysicalMemorySize();
 			double totalPhysicalMemory = os.getTotalPhysicalMemorySize();
-			double physicalMemoryRatio = freePhysicalMemory / totalPhysicalMemory;
-			if (physicalMemoryRatio > percentCritical) {
-				builder.critical();
-				builder.message(String.valueOf(physicalMemoryRatio) + " > " + String.valueOf(percentCritical));
-			} else if (physicalMemoryRatio > percentWarning) {
-				builder.warning();
-				builder.message(String.valueOf(physicalMemoryRatio) + " > " + String.valueOf(percentWarning));
-			}
+			getThreshold().evaluate(builder, freePhysicalMemory / totalPhysicalMemory);
 			builder.addContext("freePhysicalMemory", freePhysicalMemory)
 				.addContext("totalPhysicalMemory", totalPhysicalMemory);
 		} else {
-			builder.message("Cannot get swap information from jvm");
+			builder.addContext("swapSpace", "Cannot get swap information from jvm");
 		}
-	}
-
-	public double getPercentWarning() {
-		return percentWarning;
-	}
-
-	public void setPercentWarning(double percentWarning) {
-		this.percentWarning = percentWarning;
-	}
-
-	public double getPercentCritical() {
-		return percentCritical;
-	}
-
-	public void setPercentCritical(double percentCritical) {
-		this.percentCritical = percentCritical;
 	}
 }

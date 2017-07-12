@@ -1,41 +1,55 @@
-package org.towerhawk.jackson.resolver;
+package org.towerhawk.serde.resolver;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.DatabindContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.jsontype.impl.TypeIdResolverBase;
-import com.fasterxml.jackson.databind.type.SimpleType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
+import java.lang.annotation.Annotation;
+import java.util.HashMap;
 import java.util.Map;
 
-public class CheckTypeResolver extends TypeIdResolverBase {
+@Slf4j
+public abstract class AbstractTypeResolver extends TypeIdResolverBase {
 
-	private Logger log = LoggerFactory.getLogger(getClass());
-	private static Map<String, JavaType> types = new LinkedHashMap<>();
+	private static Map<Class, Map<String, JavaType>> types = new HashMap<>();
+
+	private Map<String, JavaType> getTypes() {
+		return types.get(getAnnotationType());
+	}
+
+	abstract protected Class<? extends Annotation> getAnnotationType();
+
+	abstract protected String getType(Class c);
 
 	@Override
 	public void init(JavaType bt) {
 		super.init(bt);
+		if (getTypes() == null) {
+			types.put(getAnnotationType(), new HashMap<>());
+		} else {
+			// We've already initialized for this class and jackson is creating a new type resolver
+			return;
+		}
 		ClassPathScanningCandidateComponentProvider scanner =
 			new ClassPathScanningCandidateComponentProvider(false);
 
-		scanner.addIncludeFilter(new AnnotationTypeFilter(CheckType.class));
+		scanner.addIncludeFilter(new AnnotationTypeFilter(getAnnotationType()));
 
 		for (BeanDefinition bd : scanner.findCandidateComponents("org.towerhawk")) {
 			try {
 				Class<?> clazz = Class.forName(bd.getBeanClassName());
-				CheckType checkType = clazz.getAnnotation(CheckType.class);
-				String type = checkType.value();
-				if (types.get(type) == null) {
+				String type = getType(clazz);
+				if (getTypes().get(type) == null) {
 					log.info("Mapping type {} to class {}", type, clazz.getCanonicalName());
-					types.put(type, SimpleType.constructUnsafe(clazz));
+					JavaType javaType = TypeFactory.defaultInstance().constructSimpleType(clazz, null);
+					getTypes().put(type, javaType);
 				}
 			} catch (Exception e) {
 				log.error("Unable to get type information for {}", bd.getBeanClassName(), e);
@@ -61,9 +75,9 @@ public class CheckTypeResolver extends TypeIdResolverBase {
 
 	@Override
 	public JavaType typeFromId(DatabindContext context, String id) throws IOException {
-		JavaType type = types.get(id);
+		JavaType type = getTypes().get(id);
 		if (type == null) {
-			log.error("Unable to find class that matches type {}. Is it annotated?");
+			log.error("Unable to find class that matches type {}. Is the type correct?", id);
 		}
 		return type;
 	}

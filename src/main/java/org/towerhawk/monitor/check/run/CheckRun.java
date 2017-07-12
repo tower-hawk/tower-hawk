@@ -11,7 +11,6 @@ import java.util.Map;
 
 /**
  * CheckRun is meant to be an immutable representation of Check::run()
- *
  */
 public interface CheckRun extends Comparable<CheckRun> {
 
@@ -37,19 +36,20 @@ public interface CheckRun extends Comparable<CheckRun> {
 	}
 
 	/**
-	 *
 	 * @return The status of this CheckRun.
 	 */
 	Status getStatus();
 
 	/**
 	 * If any Exceptions are thrown inside of Check::run() they can be retrieved here.
+	 *
 	 * @return Any errors experienced by the check, null otherwise
 	 */
 	Throwable getError();
 
 	/**
 	 * A message that the check can set to summarize the call to Check::run()
+	 *
 	 * @return The message that was set by the check
 	 */
 	String getMessage();
@@ -57,48 +57,42 @@ public interface CheckRun extends Comparable<CheckRun> {
 	/**
 	 * This allows for any context to be added. This is useful when a CheckRun contains
 	 * many other CheckRun instances.
+	 *
 	 * @return
 	 */
 	Map<String, Object> getContext();
 
 	/**
-	 *
 	 * @return The duration of the check.
 	 */
 	Duration getDuration();
 
 	/**
-	 *
 	 * @return The ZonedDateTime that the check started
 	 */
 	ZonedDateTime getStartTime();
 
 	/**
-	 *
 	 * @return The ZonedDateTime that the check ended
 	 */
 	ZonedDateTime getEndTime();
 
 	/**
-	 *
 	 * @return The time that the check started failing, if in a failing state
 	 */
 	ZonedDateTime getFailingSince();
 
 	/**
-	 *
 	 * @return true if the check needed to be interrupted, false otherwise
 	 */
 	boolean isTimedOut();
 
 	/**
-	 *
 	 * @return The check that is tied to this CheckRun
 	 */
 	Check getCheck();
 
 	/**
-	 *
 	 * @return The CheckRun that happened before this CheckRun. This can make a linked list.
 	 */
 	CheckRun getPreviousCheckRun();
@@ -113,11 +107,15 @@ public interface CheckRun extends Comparable<CheckRun> {
 	 * CheckRuns can be compared to one another. The default implementation compares CheckRuns
 	 * by the ordinal value of Status and if they're equal then by the underlying Check
 	 * and if those are equal then by getDuration()
+	 *
 	 * @param c
 	 * @return
 	 */
 	default int compareTo(CheckRun c) {
 		//return ordinal to sort by status and if equal
+		if(c.getStatus() == null || getStatus() == null) {
+			return -1;
+		}
 		int sort = Integer.compare(getStatus().getOrdinal(), c.getStatus().getOrdinal());
 		if (sort == 0) {
 			//otherwise sort by how the checks sort
@@ -132,6 +130,7 @@ public interface CheckRun extends Comparable<CheckRun> {
 
 	/**
 	 * Returns an instance of CheckRun.Builder.
+	 *
 	 * @param check - sets the underlying check
 	 * @return
 	 */
@@ -147,6 +146,7 @@ public interface CheckRun extends Comparable<CheckRun> {
 	 * Used to build a CheckRun from another CheckRun, especially useful if a check
 	 * was active and now is not so that context and message can be kept, but the Status
 	 * can be changed.
+	 *
 	 * @param checkRun
 	 * @return
 	 */
@@ -156,7 +156,7 @@ public interface CheckRun extends Comparable<CheckRun> {
 
 	class Builder {
 
-		private Status status;
+		private Status status = null; //Status.SUCCEEDED;
 		private boolean unknownIsCritical = true;
 		private Throwable error = null;
 		private String message = null;
@@ -195,21 +195,47 @@ public interface CheckRun extends Comparable<CheckRun> {
 		}
 
 		public Builder succeeded() {
+			if (this.status == null) {
+				this.status = Status.SUCCEEDED;
+			}
+			return this;
+		}
+
+		public Builder forceSucceeded() {
 			this.status = Status.SUCCEEDED;
 			return this;
 		}
 
-		public Builder warning() {
-			this.status = Status.WARNING;
+		public Builder unknown() {
+			if (status == null || status.ordinal() > Status.UNKNOWN.ordinal()) {
+				this.status = Status.UNKNOWN;
+			}
 			return this;
 		}
 
-		public Builder unknown() {
+		public Builder forceUnknown() {
 			this.status = Status.UNKNOWN;
 			return this;
 		}
 
+		public Builder warning() {
+			if (status == null || status.ordinal() > Status.WARNING.ordinal()) {
+				this.status = Status.WARNING;
+			}
+			return this;
+		}
+
+		public Builder forceWarning() {
+			this.status = Status.WARNING;
+			return this;
+		}
+
 		public Builder critical() {
+			return forceCritical();
+		}
+
+		//here for completeness
+		public Builder forceCritical() {
 			this.status = Status.CRITICAL;
 			return this;
 		}

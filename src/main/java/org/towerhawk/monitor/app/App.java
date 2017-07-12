@@ -6,9 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
-import org.towerhawk.monitor.check.run.CheckRunAccumulator;
 import org.towerhawk.monitor.check.run.CheckRunAggregator;
 import org.towerhawk.monitor.check.run.CheckRunner;
+import org.towerhawk.monitor.check.run.DefaultCheckRunAggregator;
 import org.towerhawk.spring.config.Configuration;
 
 import java.io.IOException;
@@ -16,13 +16,12 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
 public class App extends AbstractCheck {
 
 	private Logger log = LoggerFactory.getLogger(this.getClass());
-	protected static CheckRunAggregator __aggregator = new CheckRunAggregator() {};
+	protected CheckRunAggregator aggregator = new DefaultCheckRunAggregator();
 	protected Map<String, Check> checks = new LinkedHashMap<>();
 	protected long defaultCacheMs;
 	protected long defaultTimeoutMs;
@@ -32,26 +31,25 @@ public class App extends AbstractCheck {
 
 	public App() {
 		type = "app";
+		cacheMs = 0;
 	}
 
 	@Override
 	protected void doRun(CheckRun.Builder builder) {
 		List<CheckRun> checkRuns = checkRunner.runChecks(checks.values());
-		__aggregator.aggregate(builder, checkRuns, "OK", configuration.getLineDelimiter());
+		aggregator.aggregate(builder, checkRuns, "OK", configuration.getLineDelimiter());
 		checkRuns.forEach(checkRun -> builder.addContext(checkRun.getCheck().getId(), checkRun));
 	}
 
 	@Override
-	public void init(Check check, Configuration configuration) {
-		super.init(check, configuration);
+	public void init(Check check, Configuration configuration, App app, String id) {
+		super.init(check, configuration, app, id);
 		defaultCacheMs = configuration.getDefaultCacheMs();
 		defaultTimeoutMs = configuration.getDefaultTimeoutMs();
 		defaultPriority = configuration.getDefaultPriority();
 		App previousApp = (App) check;
-		getChecks().forEach((id, c) -> {
-			c.setId(id);
-			c.setApp(this);
-			c.init(previousApp == null ? null : previousApp.getChecks().get(c.getId()), configuration);
+		getChecks().forEach((checkId, c) -> {
+			c.init(previousApp == null ? null : previousApp.getChecks().get(c.getId()), configuration, this, checkId);
 		});
 		checks = Collections.unmodifiableMap(checks);
 		if (isActive()) {

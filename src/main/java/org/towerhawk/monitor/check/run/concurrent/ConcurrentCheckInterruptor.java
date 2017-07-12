@@ -50,16 +50,9 @@ public class ConcurrentCheckInterruptor implements Runnable, AutoCloseable {
 		submit(handler, true);
 	}
 
-	private void remove(ConcurrentCheckRunHandler handler, boolean shouldInterrupt) {
+	public boolean remove(ConcurrentCheckRunHandler handler) {
 		log.debug("Removing handler for {}", handler.getCheck().getId());
-		boolean success = this.checkRunHandlerQueue.remove(handler);
-		if (success && shouldInterrupt) {
-			interrupt();
-		}
-	}
-
-	public void remove(ConcurrentCheckRunHandler handler) {
-		remove(handler, true);
+		return this.checkRunHandlerQueue.remove(handler);
 	}
 
 	@Override
@@ -105,6 +98,7 @@ public class ConcurrentCheckInterruptor implements Runnable, AutoCloseable {
 				future.cancel(true);
 			} catch (Throwable t) {
 				log.error("Caught unexpected exception", t);
+				handler.cancel();
 			}
 		}
 	}

@@ -13,15 +13,13 @@ import java.util.stream.IntStream;
 
 public class RecentCheckRunTest {
 
-	Check check;
-	CheckRun checkRun;
+	private Check check;
+	private CheckRun checkRun;
 
 	@Before
 	public void setup() {
 		App app = new App();
-		app.setId("RecentCheckRunTest");
-		app.setApp(app);
-		app.init(null, new Configuration());
+		app.init(null, new Configuration(), app, "RecentCheckRunTest");
 		checkRun = CheckRun.builder(check).message("Testing RecentCheckRun").succeeded().build();
 		check = app;
 	}
@@ -43,7 +41,7 @@ public class RecentCheckRunTest {
 	@Test
 	public void testCopyOrder() {
 		List<CheckRun> checkRuns = generateCheckRuns(20, 10);
-		RecentCheckRun recentCheckRun = new RecentCheckRun(10, checkRun);
+		RecentCheckRun recentCheckRun = new RecentCheckRun().setDefaultCheckRun(checkRun);
 		checkRuns.forEach(checkRun -> recentCheckRun.addCheckRun(checkRun));
 		checkRuns = recentCheckRun.getRecentCheckRuns();
 		Assert.assertEquals("CheckRun 0 should be first", "0", checkRuns.get(0).getMessage());
@@ -51,7 +49,7 @@ public class RecentCheckRunTest {
 	}
 
 	private List<CheckRun> generateCheckRuns(int sizeLimit, int count) {
-		RecentCheckRun recentCheckRun = new RecentCheckRun(sizeLimit, checkRun);
+		RecentCheckRun recentCheckRun = new RecentCheckRun().setDefaultCheckRun(checkRun).setSizeLimit(sizeLimit);
 		IntStream.range(0, count).forEach(i -> {
 			CheckRun.Builder builder = CheckRun.builder(check);
 			builder.message(String.valueOf(i));

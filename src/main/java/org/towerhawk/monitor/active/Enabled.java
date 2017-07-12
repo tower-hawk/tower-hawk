@@ -1,6 +1,9 @@
 package org.towerhawk.monitor.active;
 
-public class Enabled implements ActiveCheck {
+import org.towerhawk.serde.resolver.ActiveType;
+
+@ActiveType("enabled")
+public class Enabled implements Active {
 
 	@Override
 	public boolean isActive() {

@@ -3,9 +3,9 @@ package org.towerhawk.monitor.check;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
-import org.towerhawk.jackson.resolver.CheckTypeResolver;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.serde.resolver.CheckTypeResolver;
 import org.towerhawk.spring.config.Configuration;
 
 import java.io.Closeable;
@@ -28,13 +28,6 @@ public interface Check extends Comparable<Check>, Closeable {
 	 * @return the Id of this check
 	 */
 	String getId();
-
-	/**
-	 * Sets the id of this check. Should generally be called by the process that deserializes
-	 * checks from yaml.
-	 * @param id
-	 */
-	void setId(String id);
 
 	/**
 	 * This is where the real work happens. A CheckRun is returned containing information
@@ -108,12 +101,6 @@ public interface Check extends Comparable<Check>, Closeable {
 	App getApp();
 
 	/**
-	 * Set the App this check belongs to.
-	 * @param app
-	 */
-	void setApp(App app);
-
-	/**
 	 * Returns a set of tags that are used to be able to run a subset of checks.
 	 * @return The tags defined in the configuration yaml
 	 */
@@ -159,12 +146,14 @@ public interface Check extends Comparable<Check>, Closeable {
 	/**
 	 * Similar to a @PostConstruct. This method should be called by the deserialization
 	 * framework to allow checks to initialize any state they need to, like caching a
-	 * computation or starting a background thread.
+	 * computation, setting default objects, or starting a background thread.
 	 * @param check The previous check that was defined with the same App and Id
 	 * @param configuration The Configuration provided by Spring so that checks can
 	 *                      get defaults and dynamically configure themselves.
+	 * @param app The app that this check belongs to
+	 * @param id The name of this check used in returning values and in logging
 	 */
-	void init(Check check, Configuration configuration);
+	void init(Check check, Configuration configuration, App app, String id);
 
 	/**
 	 * Checks can be compared to one another. Checks with a higher getPriority() are

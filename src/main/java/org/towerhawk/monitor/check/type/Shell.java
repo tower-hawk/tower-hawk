@@ -2,10 +2,11 @@ package org.towerhawk.monitor.check.type;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.towerhawk.jackson.resolver.CheckType;
+import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.serde.resolver.CheckType;
 import org.towerhawk.spring.config.Configuration;
 
 import java.io.File;
@@ -57,7 +58,7 @@ public class Shell extends AbstractCheck {
 				builder.addContext("stderr", errorOutput);
 			}
 		} catch (Exception e) {
-			builder.critical();
+			builder.critical().error(e);
 			if (process != null) {
 				process.destroy();
 				if (process.isAlive()) {
@@ -69,8 +70,8 @@ public class Shell extends AbstractCheck {
 	}
 
 	@Override
-	public void init(Check check, Configuration configuration) {
-		super.init(check, configuration);
+	public void init(Check check, Configuration configuration, App app, String id) {
+		super.init(check, configuration, app, id);
 		if (env != null) {
 			envArray = env.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).toArray(String[]::new);
 		}

@@ -8,4 +8,6 @@ public interface CheckRunAccumulator {
 
 	List<CheckRun> waitForChecks() throws InterruptedException;
 
+	void cancelChecks();
+
 }

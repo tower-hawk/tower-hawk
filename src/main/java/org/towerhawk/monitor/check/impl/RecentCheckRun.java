@@ -1,5 +1,8 @@
 package org.towerhawk.monitor.check.impl;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.towerhawk.monitor.check.run.CheckRun;
 
 import java.util.ArrayDeque;
@@ -7,33 +10,35 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+@Accessors(chain = true)
 public class RecentCheckRun {
 
-	private int sizeLimit;
-	private Deque<CheckRun> recentCheckRuns = new ArrayDeque<>(sizeLimit);
-	private transient CheckRun defaultCheckRun;
+	@Getter	private int sizeLimit;
+	private Deque<CheckRun> recentCheckRuns;
+	@Getter	@Setter	private CheckRun defaultCheckRun;
 
-	public RecentCheckRun(int sizeLimit, CheckRun defaultCheckRun) {
-		this.sizeLimit = sizeLimit;
-		this.defaultCheckRun = defaultCheckRun;
+	public RecentCheckRun() {
+		this.sizeLimit = 10;
+		recentCheckRuns = new ArrayDeque<>(sizeLimit);
 	}
 
-	private int getSizeLimit() {
-		return sizeLimit;
-	}
-
-	private void setSizeLimit(int sizeLimit) {
+	public RecentCheckRun setSizeLimit(int sizeLimit) {
 		this.sizeLimit = sizeLimit;
 		if (this.sizeLimit < 1) {
 			this.sizeLimit = 1;
 		}
+		while (recentCheckRuns.size() > sizeLimit) {
+			recentCheckRuns.removeFirst().cleanUp();
+		}
+		return this;
 	}
 
 	public void addCheckRun(CheckRun checkRun) {
 		if (checkRun != null) {
+			//if size == 1, this prevents returning null
+			defaultCheckRun = checkRun;
 			if (recentCheckRuns.size() >= sizeLimit) {
-				CheckRun removing = recentCheckRuns.removeFirst();
-				removing.cleanUp();
+				recentCheckRuns.removeFirst().cleanUp();
 			}
 			recentCheckRuns.addLast(checkRun);
 		}

@@ -5,9 +5,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolExecutorFactoryBean;
 import org.towerhawk.spring.config.ConcurrentAppRunConfiguration;
 import org.towerhawk.spring.config.ConcurrentCheckRunConfiguration;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 @org.springframework.context.annotation.Configuration
 public class CheckServiceAutoConfiguration {
 

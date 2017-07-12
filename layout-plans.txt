@@ -17,7 +17,7 @@ Some alerts should have commands that can be run to fix any issues that may be h
 TODO:
   Allow for selection of attributes to be returned
   Create classes to use for serialization so different implementations don't need to care
-  Create default checks that go under a default app and configurations to control their creation
+  Write a generic threshold evaluation framework
   Write more check classes
   Finish api endpoints
   Write documentation
@@ -25,3 +25,5 @@ TODO:
   Write integration tests
 
 
+For JMX:
+  Query by name, attribute, path

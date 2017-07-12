@@ -3,8 +3,8 @@ package org.towerhawk.spring.autoConfig;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.towerhawk.jackson.serializer.DurationSerializer;
-import org.towerhawk.jackson.serializer.TemporalAccessorSerializer;
+import org.towerhawk.serde.serializer.DurationSerializer;
+import org.towerhawk.serde.serializer.TemporalAccessorSerializer;
 import org.towerhawk.spring.config.Configuration;
 
 import java.time.Duration;

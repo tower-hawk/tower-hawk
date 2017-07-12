@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.run.CheckRun;
-import org.towerhawk.monitor.check.run.CheckRunner;
 
 import java.util.ArrayList;
 import java.util.Collection;

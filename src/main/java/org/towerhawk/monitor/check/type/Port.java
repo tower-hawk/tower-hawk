@@ -1,11 +1,14 @@
 package org.towerhawk.monitor.check.type;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.towerhawk.jackson.resolver.CheckType;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
+import org.towerhawk.serde.resolver.CheckType;
 import org.towerhawk.spring.config.Configuration;
 
 import java.io.IOException;
@@ -13,10 +16,12 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
+@Slf4j
+@Getter
+@Setter
 @CheckType("port")
 public class Port extends AbstractCheck {
 
-	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	private int port;
 	private String host;
 	private int localPort = -1;
@@ -28,15 +33,23 @@ public class Port extends AbstractCheck {
 	private boolean includeOutputInContext = false;
 
 	@Override
-	public void init(Check check, Configuration configuration) {
-		super.init(check, configuration);
-		host = configuration.getDefaultHost();
-		localHost = configuration.getDefaultLocalHost();
+	public void init(Check check, Configuration configuration, App app, String id) {
+		super.init(check, configuration, app, id);
+		if (host == null) {
+			host = configuration.getDefaultHost();
+		}
+		if (localHost == null) {
+			localHost = configuration.getDefaultLocalHost();
+		}
+		if (threshold == null) {
+			threshold = SimpleNumericThreshold.builder().warnUpper(1000).critUpper(3000).build();
+		}
 	}
 
 	@Override
 	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
 		Socket socket = null;
+		long start = java.lang.System.currentTimeMillis();
 		try {
 			if (localPort <= 0 || Configuration.DEFAULT_LOCAL_HOST.equals(localHost)) {
 				log.info("Running port check on {}:{}", host, port);
@@ -46,17 +59,15 @@ public class Port extends AbstractCheck {
 				InetAddress address = InetAddress.getByName(localHost);
 				socket = new Socket(host, port, address, localPort);
 			}
+			getThreshold().evaluate(builder, java.lang.System.currentTimeMillis() - start);
 			if (send != null && !send.isEmpty() && expectRegex != null && !expectRegex.isEmpty()) {
 				sendAndReadFromSocket(builder, socket);
 			} else {
-				builder.succeeded();
-				builder.addContext("connection", String.format("Connection to %s:%d successful", host, port));
+				builder.succeeded().addContext("connection", String.format("Connection to %s:%d successful", host, port));
 			}
 
 		} catch (Exception e) {
-			builder.addContext("connection", String.format("Connection to %s:%d failed", host, port));
-			builder.error(e);
-			builder.critical();
+			builder.critical().error(e).addContext("connection", String.format("Connection to %s:%d failed", host, port));
 			log.warn("Failing port check {} due to exception", getId(), e);
 		} finally {
 			try {
@@ -80,8 +91,7 @@ public class Port extends AbstractCheck {
 				builder.addContext("output", result);
 			}
 			if (result.matches(expectRegex)) {
-				builder.succeeded();
-				builder.addContext("expectRegex", "found");
+				builder.succeeded().addContext("expectRegex", "found");
 			} else {
 				builder.addContext("expectRegex", "not found");
 				if (matchIsCritical) {
@@ -91,80 +101,8 @@ public class Port extends AbstractCheck {
 				}
 			}
 		} catch (Exception e) {
-			builder.addContext("send", String.format("Exception caught when trying to send or read from socket %s", e.getMessage()));
+			builder.critical().error(new RuntimeException("Exception caught when trying to send or read from socket", e));
 			log.warn("Exception caught on getCheck {} when trying to send or read from socket {}", getId(), e);
 		}
-	}
-
-	public int getPort() {
-		return port;
-	}
-
-	public void setPort(int port) {
-		this.port = port;
-	}
-
-	public String getHost() {
-		return host;
-	}
-
-	public void setHost(String host) {
-		this.host = host;
-	}
-
-	public int getLocalPort() {
-		return localPort;
-	}
-
-	public void setLocalPort(int localPort) {
-		this.localPort = localPort;
-	}
-
-	public String getLocalHost() {
-		return localHost;
-	}
-
-	public void setLocalHost(String localHost) {
-		this.localHost = localHost;
-	}
-
-	public String getSend() {
-		return send;
-	}
-
-	public void setSend(String send) {
-		this.send = send;
-	}
-
-	public String getExpectRegex() {
-		return expectRegex;
-	}
-
-	public void setExpectRegex(String expectRegex) {
-		this.expectRegex = expectRegex;
-	}
-
-	public String getOutputCharset() {
-		return outputCharset;
-	}
-
-	public void setOutputCharset(String outputCharset) {
-		this.outputCharset = outputCharset;
-	}
-
-	public boolean isMatchIsCritical() {
-		return matchIsCritical;
-	}
-
-	public void setMatchIsCritical(boolean matchIsCritical) {
-		this.matchIsCritical = matchIsCritical;
-	}
-
-	public boolean isIncludeOutputInContext() {
-		return includeOutputInContext;
-	}
-
-	public void setIncludeOutputInContext(boolean includeOutputInContext) {
-		this.includeOutputInContext = includeOutputInContext;
 	}
 }
