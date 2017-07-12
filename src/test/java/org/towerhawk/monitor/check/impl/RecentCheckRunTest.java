@@ -20,8 +20,8 @@ public class RecentCheckRunTest {
 	public void setup() {
 		App app = new App();
 		app.init(null, new Configuration(), app, "RecentCheckRunTest");
-		checkRun = CheckRun.builder(check).message("Testing RecentCheckRun").succeeded().build();
 		check = app;
+		checkRun = CheckRun.builder(check).message("Testing RecentCheckRun").succeeded().build();
 	}
 
 	@Test

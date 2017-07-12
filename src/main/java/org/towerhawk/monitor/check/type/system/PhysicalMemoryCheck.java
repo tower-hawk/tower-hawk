@@ -23,7 +23,6 @@ public class PhysicalMemoryCheck extends AbstractCheck {
 			OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 			double freePhysicalMemory = os.getFreePhysicalMemorySize();
 			double totalPhysicalMemory = os.getTotalPhysicalMemorySize();
-			os.getCommittedVirtualMemorySize()
 			double percentUsed = (1 - (freePhysicalMemory / totalPhysicalMemory)) * 100;
 			getThreshold().evaluate(builder, percentUsed);
 			builder.addContext("freePhysicalMemory", freePhysicalMemory)
