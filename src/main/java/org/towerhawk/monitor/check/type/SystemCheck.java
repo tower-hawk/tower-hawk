@@ -12,9 +12,9 @@ import org.towerhawk.monitor.check.run.CheckRunAggregator;
 import org.towerhawk.monitor.check.run.CheckRunner;
 import org.towerhawk.monitor.check.run.DefaultCheckRunAggregator;
 import org.towerhawk.monitor.check.run.ordered.SynchronousCheckRunner;
-import org.towerhawk.monitor.check.type.system.LoadAverage;
-import org.towerhawk.monitor.check.type.system.PhysicalMemory;
-import org.towerhawk.monitor.check.type.system.SwapSpace;
+import org.towerhawk.monitor.check.type.system.LoadAverageCheck;
+import org.towerhawk.monitor.check.type.system.PhysicalMemoryCheck;
+import org.towerhawk.monitor.check.type.system.SwapSpaceCheck;
 import org.towerhawk.serde.resolver.CheckType;
 import org.towerhawk.spring.config.Configuration;
 
@@ -29,9 +29,9 @@ public class SystemCheck extends AbstractCheck {
 	private CheckRunAggregator aggregator = new DefaultCheckRunAggregator();
 	private CheckRunner checkRunner = new SynchronousCheckRunner();
 	private Map<String, Check> checks = new LinkedHashMap<>(3);
-	@Getter	@Setter	private InternalLoadAverage loadAverage = null;
-	@Getter	@Setter	private InternalPhysicalMemory physicalMemory = null;
-	@Getter	@Setter	private InternalSwapSpace swapSpace = null;
+	@Getter	@Setter	private InternalLoadAverageCheck loadAverage = null;
+	@Getter	@Setter	private InternalPhysicalMemoryCheck physicalMemory = null;
+	@Getter	@Setter	private InternalSwapSpaceCheck swapSpace = null;
 
 	public SystemCheck() {
 		cacheMs = 0;
@@ -53,13 +53,13 @@ public class SystemCheck extends AbstractCheck {
 	public void init(Check check, Configuration configuration, App app, String id) {
 		super.init(check, configuration, app, id);
 		if (loadAverage == null) {
-			loadAverage = new InternalLoadAverage();
+			loadAverage = new InternalLoadAverageCheck();
 		}
 		if (physicalMemory == null) {
-			physicalMemory = new InternalPhysicalMemory();
+			physicalMemory = new InternalPhysicalMemoryCheck();
 		}
 		if (swapSpace == null) {
-			swapSpace = new InternalSwapSpace();
+			swapSpace = new InternalSwapSpaceCheck();
 		}
 		checks.put("loadAverage", loadAverage);
 		checks.put("physicalMemory", physicalMemory);
@@ -76,16 +76,16 @@ public class SystemCheck extends AbstractCheck {
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-class InternalLoadAverage extends LoadAverage {
+class InternalLoadAverageCheck extends LoadAverageCheck {
 	//Nothing to change except the annotation so type isn't required in the config yaml
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-class InternalPhysicalMemory extends PhysicalMemory {
+class InternalPhysicalMemoryCheck extends PhysicalMemoryCheck {
 	//Nothing to change except the annotation so type isn't required in the config yaml
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-class InternalSwapSpace extends SwapSpace {
+class InternalSwapSpaceCheck extends SwapSpaceCheck {
 	//Nothing to change except the annotation so type isn't required in the config yaml
 }

@@ -20,7 +20,7 @@ import java.net.Socket;
 @Getter
 @Setter
 @CheckType("port")
-public class Port extends AbstractCheck {
+public class PortCheck extends AbstractCheck {
 
 	private int port;
 	private String host;

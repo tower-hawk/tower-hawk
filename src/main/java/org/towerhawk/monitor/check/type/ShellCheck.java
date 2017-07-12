@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 @CheckType("shell")
-public class Shell extends AbstractCheck {
+public class ShellCheck extends AbstractCheck {
 
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	private String cmd = null;

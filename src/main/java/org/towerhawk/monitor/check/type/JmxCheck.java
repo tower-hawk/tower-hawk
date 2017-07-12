@@ -25,7 +25,7 @@ import java.util.Map;
 @Getter(AccessLevel.PROTECTED)
 @Setter(AccessLevel.PROTECTED)
 @CheckType("jmx")
-public class JMX extends AbstractCheck {
+public class JmxCheck extends AbstractCheck {
 
 	/**
 	 * Takes precedences over host and port

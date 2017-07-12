@@ -9,9 +9,9 @@ import org.towerhawk.serde.resolver.CheckType;
 import java.lang.management.ManagementFactory;
 
 @CheckType("physicalMemory")
-public class PhysicalMemory extends AbstractCheck{
+public class PhysicalMemoryCheck extends AbstractCheck{
 
-	public PhysicalMemory() {
+	public PhysicalMemoryCheck() {
 		cacheMs = 0;
 		threshold = SimpleNumericThreshold.builder().warnUpper(0.9).critUpper(0.95).build();
 	}

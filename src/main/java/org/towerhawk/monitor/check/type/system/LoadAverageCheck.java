@@ -14,14 +14,14 @@ import org.towerhawk.spring.config.Configuration;
 import java.lang.management.ManagementFactory;
 
 @CheckType("loadAverage")
-public class LoadAverage extends AbstractCheck {
+public class LoadAverageCheck extends AbstractCheck {
 
 	private int availableProcs = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
 	@Getter
 	@Setter
 	boolean loadRatio = true;
 
-	public LoadAverage() {
+	public LoadAverageCheck() {
 		cacheMs = 0;
 		threshold = SimpleNumericThreshold.builder().warnUpper(2).critUpper(4).build();
 	}

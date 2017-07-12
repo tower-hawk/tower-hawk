@@ -9,9 +9,9 @@ import org.towerhawk.serde.resolver.CheckType;
 import java.lang.management.ManagementFactory;
 
 @CheckType("swapSpace")
-public class SwapSpace extends AbstractCheck{
+public class SwapSpaceCheck extends AbstractCheck{
 
-	public SwapSpace() {
+	public SwapSpaceCheck() {
 		cacheMs = 0;
 		threshold = SimpleNumericThreshold.builder().warnUpper(0.6).critUpper(0.8).build();
 	}
