@@ -20,7 +20,7 @@ public interface Check extends Comparable<Check>, Closeable {
 
 	long CACHE_MS = -1;
 	long TIMEOUT_MS = -1;
-	int PRIORITY = Integer.MIN_VALUE;
+	byte PRIORITY = Byte.MIN_VALUE;
 
 	/**
 	 * The id for this check. This should match the dictionary key in the configuration yaml.
@@ -30,16 +30,21 @@ public interface Check extends Comparable<Check>, Closeable {
 	 */
 	String getId();
 
+	default String getFullName() {
+		return getApp().getId() + ":" + getId();
+	}
+
 	/**
 	 * This is where the real work happens. A CheckRun is returned containing information
-	 * about how the check went. This is a synchronized method to ensure that multiple
+	 * about how the check went. This can be a synchronized method to ensure that multiple
 	 * runs don't happen concurrently. Logic should be in place in this method to see if
 	 * a check can run (see canRun()) and if this method gets called concurrently
 	 * the second invocation can return the results of the first invocation.
 	 *
+	 * @param checkContext
 	 * @return The CheckRun representing the results of this run().
 	 */
-	CheckRun run();
+	CheckRun run(CheckContext checkContext);
 
 	/**
 	 * This determines whether the check is active right now or not. This allows different
@@ -84,7 +89,7 @@ public interface Check extends Comparable<Check>, Closeable {
 	 *
 	 * @return the priority of the check
 	 */
-	int getPriority();
+	byte getPriority();
 
 	/**
 	 * An alias for this check. When looking up checks by id, this method should also be
@@ -117,7 +122,7 @@ public interface Check extends Comparable<Check>, Closeable {
 	Set<String> getTags();
 
 	/**
-	 * @return The most recent check run. Equivalent to getting the last element of
+	 * @return The most recent {@link CheckRun}. Equivalent to getting the last element of
 	 * getRecentCheckRuns()
 	 */
 	CheckRun getLastCheckRun();

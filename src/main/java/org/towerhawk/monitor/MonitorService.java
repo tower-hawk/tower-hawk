@@ -5,8 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.active.Enabled;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
+import org.towerhawk.monitor.check.CheckContext;
+import org.towerhawk.monitor.check.DefaultCheckContext;
 import org.towerhawk.monitor.check.run.CheckRunner;
-import org.towerhawk.monitor.check.run.concurrent.ConcurrentCheckInterruptor;
 import org.towerhawk.monitor.check.run.concurrent.ConcurrentCheckRunner;
 import org.towerhawk.monitor.reader.CheckDeserializer;
 import org.towerhawk.monitor.reader.CheckRefresher;
@@ -22,27 +23,26 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.ExecutorService;
+import java.util.LinkedHashMap;
 
 @Slf4j
 @Named
 public class MonitorService extends App {
 
-	private final CheckRunner checkRunnerForChecks;
+	private final CheckRunner checkCheckRunner;
+	private final CheckContext checkContext = new DefaultCheckContext();
 	@Getter
 	private ZonedDateTime lastRefresh = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
 
 	@Inject
-	public MonitorService(Configuration configuration
-		, ConcurrentCheckInterruptor interruptor
-		, ExecutorService checkRunService
-		, ExecutorService appRunService) {
-		//Require configuration so Spring starts it up after the config is available
+	public MonitorService(Configuration configuration,
+												ConcurrentCheckRunner checkCheckRunner,
+												ConcurrentCheckRunner appCheckRunner) {
 		setConfiguration(configuration);
-		CheckRunner appRunner = new ConcurrentCheckRunner(interruptor, appRunService);
-		setCheckRunner(appRunner);
-		checkRunnerForChecks = new ConcurrentCheckRunner(interruptor, checkRunService);
-		setType("CheckService");
+		setCheckRunner(appCheckRunner);
+		this.checkCheckRunner = checkCheckRunner;
+		setType("MonitorService");
+		checks = new LinkedHashMap<>();
 	}
 
 	@PostConstruct
@@ -57,7 +57,7 @@ public class MonitorService extends App {
 			System.exit(1);
 		}
 		if (refreshed && getConfiguration().isRunChecksOnStartup() && !getConfiguration().isRunChecksOnRefresh()) {
-			run();
+			run(checkContext);
 		}
 	}
 
@@ -67,7 +67,7 @@ public class MonitorService extends App {
 			postProcess(newDefs);
 			checks = Collections.unmodifiableMap(newDefs.getApps());
 			if (getConfiguration().isRunChecksOnRefresh()) {
-				run();
+				run(checkContext);
 			}
 			lastRefresh = ZonedDateTime.now();
 		} catch (RuntimeException e) {
@@ -87,11 +87,11 @@ public class MonitorService extends App {
 
 	@Override
 	public void init(Check check, Configuration configuration, App app, String id) {
-		setCacheMs(0);
-		setTimeoutMs(0);
-		setPriority(Integer.MAX_VALUE);
 		setActive(new Enabled());
 		super.init(check, configuration, app, id);
+		setTimeoutMs(configuration.getHardTimeoutLimit());
+		setPriority(Byte.MAX_VALUE);
+
 	}
 
 	@Override
@@ -99,11 +99,20 @@ public class MonitorService extends App {
 		return true;
 	}
 
+	@Override
+	public String predicateKey() {
+		return "appPredicate";
+	}
+
+	public String appPredicateKey() {
+		return super.predicateKey();
+	}
+
 	private void postProcess(CheckDeserializer checkDeserializer) {
 		Collection<Check> appsToClose = new ArrayList<>();
 		//initialize all checks first
 		checkDeserializer.getApps().forEach((id, app) -> {
-			app.setCheckRunner(checkRunnerForChecks);
+			app.setCheckRunner(checkCheckRunner);
 			Check previousApp = checks.get(app.getId());
 			app.init(previousApp, getConfiguration(), this, id);
 			if (previousApp != null) {
@@ -115,7 +124,7 @@ public class MonitorService extends App {
 			try {
 				previousApp.close();
 			} catch (IOException e) {
-				log.error("App {} failed to close with exception", previousApp.getId(), e);
+				log.error("App {} failed to close with exception", previousApp.getFullName(), e);
 			}
 		});
 	}

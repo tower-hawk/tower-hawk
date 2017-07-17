@@ -15,7 +15,7 @@ public class TestCheck extends AbstractCheck {
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
+	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) throws InterruptedException {
 
 	}
 }

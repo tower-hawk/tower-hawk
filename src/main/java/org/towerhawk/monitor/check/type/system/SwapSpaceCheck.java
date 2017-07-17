@@ -1,6 +1,7 @@
 package org.towerhawk.monitor.check.type.system;
 
 import com.sun.management.OperatingSystemMXBean;
+import org.towerhawk.monitor.check.CheckContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
@@ -17,14 +18,14 @@ public class SwapSpaceCheck extends AbstractCheck {
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
+	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) throws InterruptedException {
 		builder.succeeded();
 		if (ManagementFactory.getOperatingSystemMXBean() instanceof OperatingSystemMXBean) {
 			OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 			long freeSwapSpace = os.getFreeSwapSpaceSize();
 			long totalSwapSpace = os.getTotalSwapSpaceSize();
 			if (totalSwapSpace > 0) {
-				double percentSwapUsed = (freeSwapSpace / totalSwapSpace) * 100;
+				double percentSwapUsed = ((double) freeSwapSpace / totalSwapSpace) * 100;
 				getThreshold().evaluate(builder, percentSwapUsed);
 				builder.addContext("freeSwapSpace", freeSwapSpace)
 					.addContext("totalSwapSpace", totalSwapSpace)

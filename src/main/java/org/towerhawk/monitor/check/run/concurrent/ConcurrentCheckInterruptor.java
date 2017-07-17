@@ -39,7 +39,7 @@ public class ConcurrentCheckInterruptor implements Runnable, AutoCloseable {
 	}
 
 	private void submit(ConcurrentCheckRunHandler handler, boolean shouldInterrupt) {
-		log.debug("Adding handler for {}", handler.getCheck().getId());
+		log.debug("Adding handler for {}", handler.getCheck().getFullName());
 		boolean success = this.checkRunHandlerQueue.add(handler);
 		if (success && shouldInterrupt) {
 			interrupt();
@@ -51,7 +51,7 @@ public class ConcurrentCheckInterruptor implements Runnable, AutoCloseable {
 	}
 
 	public boolean remove(ConcurrentCheckRunHandler handler) {
-		log.debug("Removing handler for {}", handler.getCheck().getId());
+		log.debug("Removing handler for {}", handler.getCheck().getFullName());
 		return this.checkRunHandlerQueue.remove(handler);
 	}
 
@@ -73,10 +73,10 @@ public class ConcurrentCheckInterruptor implements Runnable, AutoCloseable {
 					if (future != null && !future.isDone()) {
 						long timeout = handler.getTimeUntilTimeout();
 						if (timeout > 0) {
-							log.debug("Waiting for {} to run for {} ms", handler.getCheck().getId(), timeout);
+							log.debug("Waiting for {} to run for {} ms", handler.getCheck().getFullName(), timeout);
 							future.get(timeout, TimeUnit.MILLISECONDS);
 						} else {
-							log.warn("Cancelling {} without waiting", handler.getCheck().getId());
+							log.warn("Cancelling {} without waiting", handler.getCheck().getFullName());
 							future.cancel(true);
 						}
 					}
@@ -90,14 +90,18 @@ public class ConcurrentCheckInterruptor implements Runnable, AutoCloseable {
 					submit(handler, false);
 				}
 			} catch (ExecutionException e) {
-				log.warn("Check {} completed exceptionally", handler.getCheck().getId(), e);
+				log.warn("Check {} completed exceptionally", handler.getCheck().getFullName(), e);
 				// Do nothing since execution has finished
 			} catch (TimeoutException e) {
 				//future shouldn't be null since this can only happen when trying to wait for it to finish
-				log.info("Cancelling {} after waiting and getting a TimeoutException", handler.getCheck().getId());
+				log.info("Cancelling {} after waiting and getting a TimeoutException", handler.getCheck().getFullName());
 				future.cancel(true);
 			} catch (Throwable t) {
-				log.error("Caught unexpected exception", t);
+				String id = null;
+				if (handler != null) {
+					id = handler.getCheck().getFullName();
+				}
+				log.error("Caught unexpected exception for check {}", id, t);
 				handler.cancel();
 			}
 		}

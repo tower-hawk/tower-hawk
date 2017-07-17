@@ -26,13 +26,14 @@ class ConcurrentCheckRunAccumulator implements CheckRunAccumulator {
 	private Collection<ConcurrentCheckRunHandler> handlers = new ConcurrentLinkedQueue<>();
 
 	public void accumulate(CheckRun checkRun) {
-		log.debug("Accumulating CheckRun for {}", checkRun.getCheck().getId());
+		log.debug("Accumulating CheckRun for {}", checkRun.getCheck().getFullName());
 		// Can throw a null-pointer exception that is difficult to track down
 		// since the main thread can end up waiting on this forever.
 		try {
 			checkRuns.add(checkRun);
+			checkSet.remove(checkRun.getCheck());
 		} catch (Exception e) {
-			log.error("Unable to accumulate check {}", checkRun.getCheck().getId());
+			log.error("Unable to accumulate check {}", checkRun.getCheck().getFullName());
 		} finally {
 			latch.countDown();
 		}
@@ -49,7 +50,7 @@ class ConcurrentCheckRunAccumulator implements CheckRunAccumulator {
 		try {
 			latch.await();
 		} catch (InterruptedException e) {
-			log.warn("Got interrupted waiting for checks {} to complete", checkSet.stream().map(Check::getId).collect(Collectors.toList()));
+			log.warn("Got interrupted waiting for checks {} to complete", checkSet.stream().map(Check::getFullName).collect(Collectors.toList()));
 			cancelChecks();
 		}
 		return getChecks();

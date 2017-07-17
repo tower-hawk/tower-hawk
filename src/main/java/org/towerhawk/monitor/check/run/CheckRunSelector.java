@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 public class CheckRunSelector implements CheckRun {
@@ -26,9 +25,14 @@ public class CheckRunSelector implements CheckRun {
 		endTime,
 		failingSince,
 		timedOut,
+		id,
+		type,
+		tags,
+		priority,
 		check,
 		previousCheckRun,
-		recursiveCheckRun
+		recursiveCheckRun,
+		_all
 	}
 
 	private Status status = null;
@@ -40,6 +44,10 @@ public class CheckRunSelector implements CheckRun {
 	private ZonedDateTime endTime = null;
 	private ZonedDateTime failingSince = null;
 	private Boolean timedOut = null;
+	private String id = null;
+	private String type = null;
+	private Set<String> tags = null;
+	private Byte priority = null;
 	private Check check = null;
 	private CheckRun previousCheckRun = null;
 
@@ -48,6 +56,13 @@ public class CheckRunSelector implements CheckRun {
 			fields = configuration.getCheckRunDefaultFields();
 		}
 		final Set<Field> fieldSet = new HashSet<>(fields);
+		if (fieldSet.contains(Field._all)) {
+			for (Field field : Field.values()) {
+				if (field != Field.check && field != Field.error) {
+					fieldSet.add(field);
+				}
+			}
+		}
 		if (fieldSet.contains(Field.status)) {
 			status = checkRun.getStatus();
 		}
@@ -89,11 +104,28 @@ public class CheckRunSelector implements CheckRun {
 		if (fieldSet.contains(Field.timedOut)) {
 			timedOut = checkRun.isTimedOut();
 		}
+		if (fieldSet.contains(Field.id)) {
+			id = checkRun.getCheck().getId();
+		}
+		if (fieldSet.contains(Field.type)) {
+			type = checkRun.getCheck().getType();
+		}
+		if (fieldSet.contains(Field.tags)) {
+			tags = checkRun.getCheck().getTags();
+		}
+		if (fieldSet.contains(Field.type)) {
+			priority = checkRun.getCheck().getPriority();
+		}
 		if (fieldSet.contains(Field.check)) {
 			check = checkRun.getCheck();
 		}
 		if (fields.contains(Field.previousCheckRun)) {
-			previousCheckRun = checkRun.getPreviousCheckRun();
+			previousCheckRun = getPreviousCheckRun();
+			if (previousCheckRun != null) {
+				Set<Field> newSet = new HashSet<>(fieldSet);
+				newSet.remove(Field.previousCheckRun);
+				previousCheckRun = new CheckRunSelector(previousCheckRun, newSet, configuration);
+			}
 		}
 	}
 

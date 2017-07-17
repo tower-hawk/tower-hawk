@@ -1,8 +1,10 @@
 package org.towerhawk.monitor.check.run.concurrent;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.towerhawk.monitor.check.Check;
+import org.towerhawk.monitor.check.CheckContext;
 import org.towerhawk.monitor.check.run.CheckRun;
 
 import java.util.ArrayList;
@@ -17,8 +19,10 @@ public class ConcurrentCheckRunner implements AsynchronousCheckRunner {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
-	private ExecutorService checkRunService;
-	private ConcurrentCheckInterruptor interruptor;
+	@Getter
+	private final ExecutorService checkRunService;
+	@Getter
+	private final ConcurrentCheckInterruptor interruptor;
 
 	public ConcurrentCheckRunner(ConcurrentCheckInterruptor interruptor, ExecutorService checkRunService) {
 		this.interruptor = interruptor;
@@ -26,19 +30,19 @@ public class ConcurrentCheckRunner implements AsynchronousCheckRunner {
 	}
 
 	@Override
-	public ConcurrentCheckRunAccumulator runChecksAsync(Collection<Check> checks) {
+	public ConcurrentCheckRunAccumulator runChecksAsync(Collection<Check> checks, CheckContext checkContext) {
 		List<Check> checkList = new ArrayList<>(checks);
 		Collections.sort(checkList);
 		ConcurrentCheckRunAccumulator accumulator = new ConcurrentCheckRunAccumulator(checkList);
 		log.debug("Building handlers");
-		Collection<ConcurrentCheckRunHandler> handlers = checkList.stream().map(c -> new ConcurrentCheckRunHandler(c, accumulator, interruptor)).collect(Collectors.toList());
+		Collection<ConcurrentCheckRunHandler> handlers = checkList.stream().map(c -> new ConcurrentCheckRunHandler(c, accumulator, interruptor, checkContext)).collect(Collectors.toList());
 		handlers.forEach(h -> {
 			if (h.getCheck().canRun()) {
-				log.debug("Submitting handler for {}", h.getCheck().getId());
+				log.debug("Submitting handler for {}", h.getCheck().getFullName());
 				Future<CheckRun> handlerFuture = checkRunService.submit(h);
 				h.setCheckRunFuture(handlerFuture);
 				accumulator.addHandler(h);
-			} else { //Shortcut calling the run method just to get a cached result
+			} else { //Shortcut calling the shouldRun method just to get a cached result
 				accumulator.accumulate(h.getCheck().getLastCheckRun());
 			}
 		});
@@ -47,8 +51,8 @@ public class ConcurrentCheckRunner implements AsynchronousCheckRunner {
 	}
 
 	@Override
-	public List<CheckRun> runChecks(Collection<Check> checks) {
-		ConcurrentCheckRunAccumulator accumulator = runChecksAsync(checks);
+	public List<CheckRun> runChecks(Collection<Check> checks, CheckContext checkContext) {
+		ConcurrentCheckRunAccumulator accumulator = runChecksAsync(checks, checkContext);
 		try {
 			return accumulator.waitForChecks();
 		} catch (InterruptedException e) {

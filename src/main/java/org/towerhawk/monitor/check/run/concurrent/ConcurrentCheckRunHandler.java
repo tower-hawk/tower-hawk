@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.check.Check;
+import org.towerhawk.monitor.check.CheckContext;
 import org.towerhawk.monitor.check.run.CheckRun;
 
 import java.util.concurrent.Callable;
@@ -20,16 +21,23 @@ class ConcurrentCheckRunHandler implements Callable<CheckRun>, Comparable<Concur
 	private Future<CheckRun> checkRunFuture = null;
 	private CountDownLatch latch = new CountDownLatch(1);
 	private long timeoutEpoch;
+	private CheckContext checkContext;
 
-	ConcurrentCheckRunHandler(@NonNull Check check, @NonNull ConcurrentCheckRunAccumulator accumulator, @NonNull ConcurrentCheckInterruptor interruptor) {
+	ConcurrentCheckRunHandler(
+		@NonNull Check check,
+		@NonNull ConcurrentCheckRunAccumulator accumulator,
+		@NonNull ConcurrentCheckInterruptor interruptor,
+		@NonNull CheckContext checkContext
+	) {
 		this.check = check;
 		this.accumulator = accumulator;
 		this.interruptor = interruptor;
+		this.checkContext = checkContext;
 	}
 
 	void setCheckRunFuture(Future<CheckRun> checkRunFuture) {
 		if (checkRunFuture != null) {
-			log.debug("Setting future for {}", check.getId());
+			log.debug("Setting future for {}", check.getFullName());
 			this.checkRunFuture = checkRunFuture;
 			latch.countDown();
 		}
@@ -37,7 +45,7 @@ class ConcurrentCheckRunHandler implements Callable<CheckRun>, Comparable<Concur
 
 	Future<CheckRun> getCheckRunFuture() throws InterruptedException {
 		if (checkRunFuture == null) {
-			log.debug("Waiting on future for {}", check.getId());
+			log.debug("Waiting on future for {}", check.getFullName());
 			latch.await();
 		}
 		return this.checkRunFuture;
@@ -48,11 +56,11 @@ class ConcurrentCheckRunHandler implements Callable<CheckRun>, Comparable<Concur
 	}
 
 	void cancel() {
-		log.warn("Cancelling check {}", check.getId());
+		log.warn("Cancelling check {}", check.getFullName());
 		try {
 			getCheckRunFuture().cancel(true);
 		} catch (InterruptedException e) {
-			log.warn("Got interrupted waiting for future of check {} to return", check.getId());
+			log.warn("Got interrupted waiting for future of check {} to return", check.getFullName());
 		}
 	}
 
@@ -61,21 +69,21 @@ class ConcurrentCheckRunHandler implements Callable<CheckRun>, Comparable<Concur
 		timeoutEpoch = System.currentTimeMillis() + check.getTimeoutMs();
 		CheckRun checkRun = null;
 		try {
-			log.debug("Submitting handler for check {} to interruptor", check.getId());
+			log.debug("Submitting handler for check {} to interruptor", check.getFullName());
 			interruptor.submit(this);
-			log.debug("Running check {}", check.getId());
-			checkRun = check.run();
+			log.debug("Running check {}", check.getFullName());
+			checkRun = check.run(checkContext);
 		} catch (Exception e) {
-			log.error("Check {} completed exceptionally", check.getId(), e);
+			log.error("Check {} completed exceptionally", check.getFullName(), e);
 		} finally {
-			log.debug("Accumulating CheckRun for {}", check.getId());
+			log.debug("Accumulating CheckRun for {}", check.getFullName());
 			//TODO figure out how to make this less hackish
 			if (checkRun == null) {
 				//Call getLastCheckRun since that should always be set inside of run()
 				checkRun = check.getLastCheckRun();
 			}
 			accumulator.accumulate(checkRun);
-			log.debug("Removing handler for check {} from interruptor", check.getId());
+			log.debug("Removing handler for check {} from interruptor", check.getFullName());
 			interruptor.remove(this);
 		}
 		return checkRun;

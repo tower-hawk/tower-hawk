@@ -1,13 +1,17 @@
 package org.towerhawk.monitor.check.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.active.Active;
 import org.towerhawk.monitor.active.Enabled;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
+import org.towerhawk.monitor.check.CheckContext;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.threshold.Threshold;
 import org.towerhawk.spring.config.Configuration;
@@ -27,11 +31,13 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
+@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
 public abstract class AbstractCheck implements Check {
 
 	@Setter
 	private String type;
 	private String id = null;
+	protected transient String fullName = null;
 	private long runEndTimestamp = 0;
 	private long runStartTimestamp = 0;
 	@Setter
@@ -39,18 +45,22 @@ public abstract class AbstractCheck implements Check {
 	@Setter
 	private long timeoutMs = Check.TIMEOUT_MS;
 	@Setter
-	private int priority = Check.PRIORITY;
+	private byte priority = Check.PRIORITY;
 	private ZonedDateTime failingSince = null;
 	private String alias = null;
+	@JsonIgnore
 	private App app = null;
 	private Set<String> tags = new LinkedHashSet<>();
 	private Active active = new Enabled();
+	@JsonIgnore
 	private RecentCheckRun recentCheckRuns = new RecentCheckRun();
 	private boolean running = false;
 	private boolean unknownIsCritical = true;
 	@Setter
+	@JsonIgnore
 	private Configuration configuration;
 	private boolean initialized = false;
+	@JsonIgnore
 	private CheckRun.Builder builder = null;
 	@Setter
 	private Threshold threshold;
@@ -65,6 +75,7 @@ public abstract class AbstractCheck implements Check {
 	}
 
 	@Override
+	@JsonIgnore
 	public CheckRun getLastCheckRun() {
 		return recentCheckRuns.getLastRun();
 	}
@@ -80,11 +91,11 @@ public abstract class AbstractCheck implements Check {
 
 	@Override
 	public final boolean isCached() {
-		return System.currentTimeMillis() - runEndTimestamp < cacheMs;
+		return cachedFor() > 0;
 	}
 
 	protected final long cachedFor() {
-		return cacheMs - (System.currentTimeMillis() - runEndTimestamp);
+		return getCacheMs() - (System.currentTimeMillis() - runEndTimestamp);
 	}
 
 	protected int getMsRemaining(boolean throwException) {
@@ -118,17 +129,17 @@ public abstract class AbstractCheck implements Check {
 	}
 
 	@Override
-	public final synchronized CheckRun run() {
-		log.debug("Starting run() for {}", getId());
+	@Synchronized
+	public final CheckRun run(CheckContext checkContext) {
 		CheckRun checkRun;
-		if (!canRun()) {
+		if (!checkContext.shouldRun() || !canRun()) {
 			if (running) {
-				log.debug("Check {} is already running", getId());
+				log.debug("Check {} is already running", getFullName());
 			} else if (!initialized) {
-				log.warn("Trying to run check {} but it is not initialized", getId());
+				log.warn("Trying to run check {} but it is not initialized", getFullName());
 			} else if (!isActive()) {
-				log.debug("Check {} is not active", getId());
-				CheckRun lastRun = recentCheckRuns.getLastRun();
+				log.debug("Check {} is not active", getFullName());
+				CheckRun lastRun = getLastCheckRun();
 				if (lastRun.getStatus() != CheckRun.Status.SUCCEEDED) {
 					CheckRun.Builder copyRunBuilder = CheckRun.builder(lastRun);
 					copyRunBuilder.succeeded();
@@ -136,22 +147,22 @@ public abstract class AbstractCheck implements Check {
 					recentCheckRuns.addCheckRun(copyRunBuilder.build());
 				}
 			} else if (isCached()) {
-				log.debug("Check {} is cached for {} more ms", getId(), cachedFor());
+				log.debug("Check {} is cached for {} more ms", getFullName(), cachedFor());
 			}
-			return recentCheckRuns.getLastRun();
+			return getLastCheckRun();
 		}
+		log.debug("Starting run() for {}", getFullName());
 		running = true;
-		builder = CheckRun.builder(this);
-		builder.unknownIsCritical(isUnknownIsCritical());
+		builder = CheckRun.builder(this).unknownIsCritical(isUnknownIsCritical());
 		runStartTimestamp = builder.startTime();
 		try {
-			doRun(builder);
+			doRun(builder, checkContext);
 		} catch (InterruptedException e) {
 			builder.timedOut(true).unknown().error(e);
-			log.warn("Check {} got interrupted", getId());
+			log.warn("Check {} got interrupted", getFullName());
 		} catch (Exception e) {
-			builder.error(e);
-			log.error("doRun() for check {} threw an exception", getId(), e);
+			builder.error(e).critical();
+			log.error("doRun() for check {} threw an exception", getFullName(), e);
 		} finally {
 			runEndTimestamp = builder.endTime();
 			if (builder.getStatus() == CheckRun.Status.SUCCEEDED) {
@@ -161,10 +172,11 @@ public abstract class AbstractCheck implements Check {
 			}
 			builder.failingSince(failingSince);
 			checkRun = builder.build();
-			recentCheckRuns.addCheckRun(checkRun);
-			runStartTimestamp = 0;
+			if (checkContext.saveCheckRun()) {
+				recentCheckRuns.addCheckRun(checkRun);
+			}
 			running = false;
-			log.debug("Ending run() for {}", getId());
+			log.debug("Ending run() for {}", getFullName());
 		}
 		return checkRun;
 	}
@@ -178,6 +190,7 @@ public abstract class AbstractCheck implements Check {
 			this.configuration = configuration;
 			this.app = app;
 			this.id = id;
+			this.fullName = app.getId() + ":" + id;
 			if (cacheMs == Check.CACHE_MS) {
 				cacheMs = app.getDefaultCacheMs();
 			}
@@ -188,6 +201,9 @@ public abstract class AbstractCheck implements Check {
 				RuntimeException e = new IllegalStateException("timeoutMs cannot be less than 0.");
 				log.error("timeoutMs is set to {}", timeoutMs, e);
 				throw e;
+			}
+			if (timeoutMs > configuration.getHardTimeoutLimit()) {
+				timeoutMs = configuration.getHardTimeoutLimit();
 			}
 			if (priority == Check.PRIORITY) {
 				priority = app.getDefaultPriority();
@@ -205,7 +221,16 @@ public abstract class AbstractCheck implements Check {
 			recentCheckRuns.setDefaultCheckRun(defaultCheckRun);
 			this.setRecentCheckRunSize(configuration.getRecentChecksSizeLimit());
 			if (check != null) {
-				check.getRecentCheckRuns().forEach(checkRun -> recentCheckRuns.addCheckRun(checkRun));
+				//order must be preserved
+				for (CheckRun checkRun : check.getRecentCheckRuns()) {
+					recentCheckRuns.addCheckRun(checkRun);
+				}
+				failingSince = check.getFailingSince();
+			}
+			if (check instanceof AbstractCheck) {
+				AbstractCheck abstractCheck = (AbstractCheck) check;
+				runEndTimestamp = abstractCheck.runEndTimestamp;
+				runStartTimestamp = abstractCheck.runStartTimestamp;
 			}
 			tags = Collections.unmodifiableSet(tags);
 			initialized = true;
@@ -253,6 +278,6 @@ public abstract class AbstractCheck implements Check {
 	 *
 	 * @param builder
 	 */
-	protected abstract void doRun(CheckRun.Builder builder) throws InterruptedException;
+	protected abstract void doRun(CheckRun.Builder builder, CheckContext context) throws InterruptedException;
 
 }

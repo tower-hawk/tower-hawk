@@ -6,4 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("towerhawk.appRunnerThreadPool")
 public class ConcurrentAppRunConfiguration extends ConcurrentCheckRunConfiguration {
 
+	public ConcurrentAppRunConfiguration() {
+		setThreadGroupName("AppRunner");
+		setThreadNamePrefix("AppRunner - ");
+	}
 }

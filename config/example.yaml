@@ -86,3 +86,15 @@ apps:
             warning: ~:0
             critical: ~:1
             setMessage: true
+  test:
+    timeoutMs: 2000
+    checks:
+      crit:
+        type: critical
+      warn:
+        type: warning
+      succeeded:
+        type: succeeded
+      timeout:
+        type: timeout
+        unknownIsCritical: false

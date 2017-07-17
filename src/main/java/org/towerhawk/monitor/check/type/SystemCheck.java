@@ -1,11 +1,11 @@
 package org.towerhawk.monitor.check.type;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
+import org.towerhawk.monitor.check.CheckContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunAggregator;
@@ -31,21 +31,21 @@ public class SystemCheck extends AbstractCheck {
 	private Map<String, Check> checks = new LinkedHashMap<>(3);
 	@Getter
 	@Setter
-	private InternalLoadAverageCheck loadAverage = null;
+	private LoadAverageCheck loadAverage = null;
 	@Getter
 	@Setter
-	private InternalPhysicalMemoryCheck physicalMemory = null;
+	private PhysicalMemoryCheck physicalMemory = null;
 	@Getter
 	@Setter
-	private InternalSwapSpaceCheck swapSpace = null;
+	private SwapSpaceCheck swapSpace = null;
 
 	public SystemCheck() {
 		setCacheMs(0);
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
-		List<CheckRun> checkRuns = checkRunner.runChecks(checks.values());
+	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) throws InterruptedException {
+		List<CheckRun> checkRuns = checkRunner.runChecks(checks.values(), checkContext.duplicate());
 		aggregator.aggregate(builder, checkRuns, "OK", getConfiguration().getLineDelimiter());
 		checkRuns.stream().forEachOrdered(c -> {
 			Map<String, Object> context = c.getContext();
@@ -59,13 +59,13 @@ public class SystemCheck extends AbstractCheck {
 	public void init(Check check, Configuration configuration, App app, String id) {
 		super.init(check, configuration, app, id);
 		if (loadAverage == null) {
-			loadAverage = new InternalLoadAverageCheck();
+			loadAverage = new LoadAverageCheck();
 		}
 		if (physicalMemory == null) {
-			physicalMemory = new InternalPhysicalMemoryCheck();
+			physicalMemory = new PhysicalMemoryCheck();
 		}
 		if (swapSpace == null) {
-			swapSpace = new InternalSwapSpaceCheck();
+			swapSpace = new SwapSpaceCheck();
 		}
 		checks.put("loadAverage", loadAverage);
 		checks.put("physicalMemory", physicalMemory);
@@ -78,20 +78,4 @@ public class SystemCheck extends AbstractCheck {
 			v.init(c, configuration, getApp(), getId() + "-" + k);
 		});
 	}
-
-}
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-class InternalLoadAverageCheck extends LoadAverageCheck {
-	//Nothing to change except the annotation so type isn't required in the config yaml
-}
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-class InternalPhysicalMemoryCheck extends PhysicalMemoryCheck {
-	//Nothing to change except the annotation so type isn't required in the config yaml
-}
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-class InternalSwapSpaceCheck extends SwapSpaceCheck {
-	//Nothing to change except the annotation so type isn't required in the config yaml
 }

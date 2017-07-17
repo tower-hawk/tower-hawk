@@ -1,9 +1,12 @@
 package org.towerhawk.monitor.app;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.towerhawk.controller.filter.CheckFilter;
 import org.towerhawk.monitor.check.Check;
+import org.towerhawk.monitor.check.CheckContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunAggregator;
@@ -12,92 +15,102 @@ import org.towerhawk.monitor.check.run.DefaultCheckRunAggregator;
 import org.towerhawk.spring.config.Configuration;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+@Slf4j
+@JsonTypeInfo(use = JsonTypeInfo.Id.NONE) //remove the need to specify a type
 public class App extends AbstractCheck {
 
-	private Logger log = LoggerFactory.getLogger(this.getClass());
 	protected CheckRunAggregator aggregator = new DefaultCheckRunAggregator();
-	protected Map<String, Check> checks = new LinkedHashMap<>();
+	protected Map<String, Check> checks = null;
+	@Getter
+	@Setter
 	protected long defaultCacheMs;
+	@Getter
+	@Setter
 	protected long defaultTimeoutMs;
-	protected int defaultPriority;
-
+	@Getter
+	@Setter
+	protected byte defaultPriority;
+	@Setter
 	protected CheckRunner checkRunner;
 
 	public App() {
 		setType("app");
-		setCacheMs(0);
+	}
+
+	public String predicateKey() {
+		return "predicate";
+	}
+
+	public Check getCheck(String checkId) {
+		return getChecks().get(checkId);
+	}
+
+	protected Map<String, Check> getChecks() {
+		return checks;
+	}
+
+	protected void setChecks(Map<String, Check> checks) {
+		this.checks = checks;
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder) {
-		List<CheckRun> checkRuns = checkRunner.runChecks(checks.values());
+	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) {
+		Object mapPredicate = checkContext.getContext().get(predicateKey());
+		Collection<Check> checksToRun;
+		if (mapPredicate instanceof CheckFilter) {
+			checksToRun = getChecks().values().stream().filter(((CheckFilter) mapPredicate)::filter).collect(Collectors.toList());
+			checkContext.getContext().remove(predicateKey());
+			if (checksToRun.size() != getChecks().size()) {
+				checkContext.setSaveCheckRun(false);
+			}
+		} else {
+			checksToRun = getChecks().values();
+		}
+		CheckContext context = checkContext.duplicate().setSaveCheckRun(true);
+		List<CheckRun> checkRuns = checkRunner.runChecks(checksToRun, context);
+		aggregateChecks(builder, checkRuns);
+	}
+
+	protected void aggregateChecks(CheckRun.Builder builder, List<CheckRun> checkRuns) {
 		aggregator.aggregate(builder, checkRuns, "OK", getConfiguration().getLineDelimiter());
 		checkRuns.forEach(checkRun -> builder.addContext(checkRun.getCheck().getId(), checkRun));
 	}
 
 	@Override
 	public void init(Check check, Configuration configuration, App app, String id) {
+		if (checks == null) {
+			throw new IllegalStateException("App " + id + " must have at least one check");
+		}
 		super.init(check, configuration, app, id);
-		defaultCacheMs = configuration.getDefaultCacheMs();
-		defaultTimeoutMs = configuration.getDefaultTimeoutMs();
-		defaultPriority = configuration.getDefaultPriority();
+		defaultCacheMs = getConfiguration().getDefaultCacheMs();
+		defaultTimeoutMs = getConfiguration().getDefaultTimeoutMs();
+		defaultPriority = getConfiguration().getDefaultPriority();
 		App previousApp = (App) check;
-		getChecks().forEach((checkId, c) -> {
-			c.init(previousApp == null ? null : previousApp.getChecks().get(c.getId()), configuration, this, checkId);
-		});
-		checks = Collections.unmodifiableMap(checks);
+		getChecks().forEach((checkId, c) -> c.init(previousApp == null ? null : previousApp.getCheck(checkId), configuration, this, checkId));
+		checks = Collections.unmodifiableMap(getChecks());
+		//an App should never be cached so override any cache settings
+		setCacheMs(0);
+		fullName = "app:" + getId();
 		if (isActive()) {
-			log.info("Initialized app {}", getId());
+			log.info("Initialized {}", getFullName());
 		}
 	}
 
 	@Override
 	public void close() throws IOException {
 		super.close();
-		checks.values().stream().forEach(c -> {
+		getChecks().values().forEach(c -> {
 			try {
 				c.close();
 			} catch (IOException e) {
-				log.error("Check {} failed to close with error", c.getId(), e);
+				log.error("Check {} failed to close with exception", c.getFullName(), e);
 			}
 		});
-	}
-
-	public Map<String, Check> getChecks() {
-		return checks;
-	}
-
-	public void setCheckRunner(CheckRunner checkRunner) {
-		this.checkRunner = checkRunner;
-	}
-
-	public long getDefaultCacheMs() {
-		return defaultCacheMs;
-	}
-
-	public void setDefaultCacheMs(long defaultCacheMs) {
-		this.defaultCacheMs = defaultCacheMs;
-	}
-
-	public long getDefaultTimeoutMs() {
-		return defaultTimeoutMs;
-	}
-
-	public void setDefaultTimeoutMs(long defaultTimeoutMs) {
-		this.defaultTimeoutMs = defaultTimeoutMs;
-	}
-
-	public int getDefaultPriority() {
-		return defaultPriority;
-	}
-
-	public void setDefaultPriority(int defaultPriority) {
-		this.defaultPriority = defaultPriority;
 	}
 }

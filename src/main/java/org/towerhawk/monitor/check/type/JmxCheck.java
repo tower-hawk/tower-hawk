@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
+import org.towerhawk.monitor.check.CheckContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.serde.resolver.CheckType;
@@ -60,7 +61,7 @@ public class JmxCheck extends AbstractCheck {
 	private Class resultClass = Long.class;
 
 	@Override
-	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
+	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) throws InterruptedException {
 		try {
 			maybeRefreshConnection();
 			// now query to get the beans or whatever

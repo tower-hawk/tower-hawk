@@ -1,6 +1,7 @@
 package org.towerhawk.monitor.check.run;
 
 import lombok.Getter;
+import lombok.NonNull;
 import org.towerhawk.monitor.check.Check;
 
 import java.time.Duration;
@@ -26,7 +27,7 @@ public class CheckRunImpl implements CheckRun {
 												 Map<String, Object> context, Duration duration,
 												 ZonedDateTime startTime, ZonedDateTime endTime,
 												 ZonedDateTime failingSince, boolean timedOut,
-												 Check check, CheckRun previousCheckRun) {
+												 @NonNull Check check, CheckRun previousCheckRun) {
 		this.status = status;
 		this.error = error;
 		this.message = getMessage(message, error);

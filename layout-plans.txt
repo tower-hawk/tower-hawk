@@ -1,13 +1,13 @@
 
 / returns if the app is up and responding with some basic stats maybe
 /check runs the entire health check tree
-/check/app/app1 runs the health check for app app1
-/check/app/app1/alias runs the health check for the alias under app1
+/app/app1 runs the health check for app app1 and if not found looks for an alias of that name
+/app runs the entire health check tree
 /check/tag/tag1 runs health checks for any commands with tag1
 /check/app/app1/tag/tag1 runs the health checks for any commands with tag1 in app1
 /check/priority/1 runs the health checks for any commands with priority 1
+/check/app/app1/priority/>=1
 */info returns info on the check rather than on the check run
-post to /refresh refreshes the definitions
 post to */restarting tells the app to only start alerting once checks have cleared
 
 eventually, machine learning on outputs or combined alerts should be able to predict alerts that are going to come up and take steps to avoid issues
@@ -21,3 +21,26 @@ TODO:
   Write documentation
   Write unit tests
   Write integration tests
+
+/apps? filters apply to apps
+/app/app1
+/checks?tags=&priority-gt=2&notags&id=id1&type=type1&appPriority&appTags& filters apply to checks
+  priority
+  priority-gte
+  priority-lte
+  tags
+  notTags
+  id
+  notId
+  type
+  appTags
+  appPriority
+  appPriority-gte
+  appPriority-lte
+  appId
+  appNoId
+
+/apps/names returns names
+/checks/names returns names
+
+*/info returns information about the check

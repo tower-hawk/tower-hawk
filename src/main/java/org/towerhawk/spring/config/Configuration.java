@@ -14,12 +14,9 @@ import java.util.concurrent.TimeUnit;
 
 import static org.towerhawk.monitor.check.run.CheckRunSelector.Field.context;
 import static org.towerhawk.monitor.check.run.CheckRunSelector.Field.duration;
-import static org.towerhawk.monitor.check.run.CheckRunSelector.Field.endTime;
 import static org.towerhawk.monitor.check.run.CheckRunSelector.Field.failingSince;
 import static org.towerhawk.monitor.check.run.CheckRunSelector.Field.message;
-import static org.towerhawk.monitor.check.run.CheckRunSelector.Field.startTime;
 import static org.towerhawk.monitor.check.run.CheckRunSelector.Field.status;
-import static org.towerhawk.monitor.check.run.CheckRunSelector.Field.timedOut;
 
 @org.springframework.context.annotation.Configuration
 @ConfigurationProperties("towerhawk.monitor")
@@ -39,8 +36,8 @@ public class Configuration {
 	public static final String DEFAULT_LOCAL_HOST = "N/A";
 	private String defaultLocalHost = DEFAULT_LOCAL_HOST;
 	private long defaultCacheMs = 30000;
-	private long defaultTimeoutMs = 60000;
-	private int defaultPriority = 20;
+	private long defaultTimeoutMs = 30000;
+	private byte defaultPriority = 0;
 	private String defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 	private DateTimeFormatter dateTimeFormatter = null;
 	private TimeUnit durationTimeUnit = TimeUnit.MILLISECONDS;
@@ -78,7 +75,7 @@ public class Configuration {
 		dateTimeFormatter = DateTimeFormatter.ofPattern(defaultDateFormat, locale);
 		if (checkRunDefaultFields == null || checkRunDefaultFields.isEmpty()) {
 			checkRunDefaultFields = Arrays.asList(status, message, context
-				, duration, startTime, endTime, failingSince, timedOut);
+				, duration, failingSince);
 		}
 	}
 }

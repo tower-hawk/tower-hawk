@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
+import org.towerhawk.monitor.check.CheckContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
@@ -48,7 +49,7 @@ public class PortCheck extends AbstractCheck {
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder) throws InterruptedException {
+	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) throws InterruptedException {
 		Socket socket = null;
 		long start = java.lang.System.currentTimeMillis();
 		try {
@@ -69,14 +70,14 @@ public class PortCheck extends AbstractCheck {
 
 		} catch (Exception e) {
 			builder.critical().error(e).addContext("connection", String.format("Connection to %s:%d failed", host, port));
-			log.warn("Failing port check {} due to exception", getId(), e);
+			log.warn("Failing port check {} due to exception", getFullName(), e);
 		} finally {
 			try {
 				if (socket != null) {
 					socket.close();
 				}
 			} catch (IOException e) {
-				log.error("Unable to close connection for {} to {}:{}", getId(), socket.getInetAddress().getHostName(), socket.getPort(), e);
+				log.error("Unable to close connection for {} to {}:{}", getFullName(), socket.getInetAddress().getHostName(), socket.getPort(), e);
 			}
 		}
 	}
@@ -103,7 +104,7 @@ public class PortCheck extends AbstractCheck {
 			}
 		} catch (Exception e) {
 			builder.critical().error(new RuntimeException("Exception caught when trying to send or read from socket", e));
-			log.warn("Exception caught on getCheck {} when trying to send or read from socket {}", getId(), e);
+			log.warn("Exception caught on getCheck {} when trying to send or read from socket {}", getFullName(), e);
 		}
 	}
 }

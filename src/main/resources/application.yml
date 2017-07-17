@@ -4,9 +4,6 @@ server:
 towerhawk:
   monitor:
     checkDefinitionDir: config/
-    checkRunDefaultFields:
-      - status
-      - message
   checkRunnerThreadPool:
     corePoolSize: 1
     maxPoolSize: 1
