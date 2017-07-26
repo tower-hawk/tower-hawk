@@ -39,8 +39,8 @@ public class CheckRefresherController {
 	}
 
 	@RequestMapping(path = "/watcher", method = {RequestMethod.POST, RequestMethod.PUT})
-	public void startWatcher(@RequestParam(required = false, defaultValue = "false", name = "restart") boolean restart,
-													 @RequestParam(required = false, defaultValue = "false", name = "refresh") boolean refresh) {
+	public Map<String, Object> startWatcher(@RequestParam(required = false, defaultValue = "false") boolean restart,
+													 @RequestParam(required = false, defaultValue = "false") boolean refresh) {
 		if (restart) {
 			stopWatcher();
 		}
@@ -48,10 +48,12 @@ public class CheckRefresherController {
 		if (refresh) {
 			refresh();
 		}
+		return refreshInfo();
 	}
 
 	@RequestMapping(path = "/watcher", method = RequestMethod.DELETE)
-	public void stopWatcher() {
+	public Map<String, Object> stopWatcher() {
 		checkWatcher.stop();
+		return refreshInfo();
 	}
 }

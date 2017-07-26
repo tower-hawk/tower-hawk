@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.towerhawk.controller.filter.CheckFilter;
+import org.towerhawk.monitor.check.filter.CheckFilter;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.CheckContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
@@ -57,6 +57,10 @@ public class App extends AbstractCheck {
 
 	protected void setChecks(Map<String, Check> checks) {
 		this.checks = checks;
+	}
+
+	public Collection<String> getCheckNames() {
+		return getChecks().keySet();
 	}
 
 	@Override

@@ -7,6 +7,7 @@ import org.towerhawk.spring.config.ConcurrentCheckInterruptorConfiguration;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -96,6 +97,8 @@ public class ConcurrentCheckInterruptor implements Runnable, AutoCloseable {
 				//future shouldn't be null since this can only happen when trying to wait for it to finish
 				log.info("Cancelling {} after waiting and getting a TimeoutException", handler.getCheck().getFullName());
 				future.cancel(true);
+			} catch(CancellationException e) {
+				log.warn("Check {} was cancelled while waiting on it", handler.getCheck().getFullName());
 			} catch (Throwable t) {
 				String id = null;
 				if (handler != null) {

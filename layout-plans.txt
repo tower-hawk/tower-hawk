@@ -1,12 +1,4 @@
 
-/ returns if the app is up and responding with some basic stats maybe
-/check runs the entire health check tree
-/app/app1 runs the health check for app app1 and if not found looks for an alias of that name
-/app runs the entire health check tree
-/check/tag/tag1 runs health checks for any commands with tag1
-/check/app/app1/tag/tag1 runs the health checks for any commands with tag1 in app1
-/check/priority/1 runs the health checks for any commands with priority 1
-/check/app/app1/priority/>=1
 */info returns info on the check rather than on the check run
 post to */restarting tells the app to only start alerting once checks have cleared
 
@@ -22,24 +14,10 @@ TODO:
   Write unit tests
   Write integration tests
 
-/apps? filters apply to apps
-/app/app1
-/checks?tags=&priority-gt=2&notags&id=id1&type=type1&appPriority&appTags& filters apply to checks
-  priority
-  priority-gte
-  priority-lte
-  tags
-  notTags
-  id
-  notId
-  type
-  appTags
-  appPriority
-  appPriority-gte
-  appPriority-lte
-  appId
-  appNoId
-
+/app? filters apply to apps
+/app/app1 runs a single app
+/app/app1/check/check1 runs a single check
+/check?tags=&priority-gt=2&notags&id=id1&type=type1&appPriority&appTags& filters apply to checks
 /apps/names returns names
 /checks/names returns names
 

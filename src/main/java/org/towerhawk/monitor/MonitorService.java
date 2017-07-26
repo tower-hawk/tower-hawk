@@ -81,10 +81,6 @@ public class MonitorService extends App {
 		return (App) checks.get(appId);
 	}
 
-	public Collection<String> getAppNames() {
-		return checks.keySet();
-	}
-
 	@Override
 	public void init(Check check, Configuration configuration, App app, String id) {
 		setActive(new Enabled());

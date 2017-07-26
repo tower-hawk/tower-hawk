@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.towerhawk.controller.exception.ResourceNotFoundException;
-import org.towerhawk.controller.filter.CheckFilter;
 import org.towerhawk.monitor.MonitorService;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.DefaultCheckContext;
+import org.towerhawk.monitor.check.filter.CheckFilter;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunSelector;
 import org.towerhawk.monitor.check.run.concurrent.ConcurrentCheckRunner;
@@ -130,6 +130,16 @@ public class CheckRunnerController {
 		checkContext.putContext(monitorService.predicateKey(), appFilter);
 		CheckRun checkRun = monitorCheckRunner.runChecks(monitorCheck, checkContext).get(0);
 		return getCheckRunResponseEntity(checkRun, fields);
+	}
+
+	@RequestMapping("/apps")
+	public Collection<String> getAppNames() {
+		return monitorService.getCheckNames();
+	}
+
+	@RequestMapping("/apps/{appId}")
+	public Collection<String> getCheckNames(@PathVariable String appId) {
+		return getApp(appId).getCheckNames();
 	}
 
 	private App getApp(String appId) {

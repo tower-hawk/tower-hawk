@@ -1,4 +1,4 @@
-package org.towerhawk.controller.filter;
+package org.towerhawk.monitor.check.filter;
 
 import lombok.NonNull;
 import org.towerhawk.monitor.check.Check;
