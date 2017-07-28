@@ -40,7 +40,7 @@ public class CheckRefresherController {
 
 	@RequestMapping(path = "/watcher", method = {RequestMethod.POST, RequestMethod.PUT})
 	public Map<String, Object> startWatcher(@RequestParam(required = false, defaultValue = "false") boolean restart,
-													 @RequestParam(required = false, defaultValue = "false") boolean refresh) {
+																					@RequestParam(required = false, defaultValue = "false") boolean refresh) {
 		if (restart) {
 			stopWatcher();
 		}

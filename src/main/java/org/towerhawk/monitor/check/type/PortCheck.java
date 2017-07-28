@@ -5,7 +5,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.CheckContext;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
@@ -49,7 +49,7 @@ public class PortCheck extends AbstractCheck {
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) throws InterruptedException {
+	protected void doRun(CheckRun.Builder builder, RunContext runContext) throws InterruptedException {
 		Socket socket = null;
 		long start = java.lang.System.currentTimeMillis();
 		try {

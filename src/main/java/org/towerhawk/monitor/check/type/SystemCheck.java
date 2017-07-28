@@ -5,7 +5,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.CheckContext;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunAggregator;
@@ -44,8 +44,8 @@ public class SystemCheck extends AbstractCheck {
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) throws InterruptedException {
-		List<CheckRun> checkRuns = checkRunner.runChecks(checks.values(), checkContext.duplicate());
+	protected void doRun(CheckRun.Builder builder, RunContext runContext) throws InterruptedException {
+		List<CheckRun> checkRuns = checkRunner.runChecks(checks.values(), runContext.duplicate());
 		aggregator.aggregate(builder, checkRuns, "OK", getConfiguration().getLineDelimiter());
 		checkRuns.stream().forEachOrdered(c -> {
 			Map<String, Object> context = c.getContext();

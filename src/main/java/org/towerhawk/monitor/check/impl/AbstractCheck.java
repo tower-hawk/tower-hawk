@@ -11,7 +11,7 @@ import org.towerhawk.monitor.active.Active;
 import org.towerhawk.monitor.active.Enabled;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.CheckContext;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.threshold.Threshold;
 import org.towerhawk.spring.config.Configuration;
@@ -130,9 +130,9 @@ public abstract class AbstractCheck implements Check {
 
 	@Override
 	@Synchronized
-	public final CheckRun run(CheckContext checkContext) {
+	public final CheckRun run(RunContext runContext) {
 		CheckRun checkRun;
-		if (!checkContext.shouldRun() || !canRun()) {
+		if (!runContext.shouldRun() || !canRun()) {
 			if (running) {
 				log.debug("Check {} is already running", getFullName());
 			} else if (!initialized) {
@@ -156,7 +156,7 @@ public abstract class AbstractCheck implements Check {
 		builder = CheckRun.builder(this).unknownIsCritical(isUnknownIsCritical());
 		runStartTimestamp = builder.startTime();
 		try {
-			doRun(builder, checkContext);
+			doRun(builder, runContext);
 		} catch (InterruptedException e) {
 			builder.timedOut(true).unknown().error(e);
 			log.warn("Check {} got interrupted", getFullName());
@@ -172,7 +172,7 @@ public abstract class AbstractCheck implements Check {
 			}
 			builder.failingSince(failingSince);
 			checkRun = builder.build();
-			if (checkContext.saveCheckRun()) {
+			if (runContext.saveCheckRun()) {
 				recentCheckRuns.addCheckRun(checkRun);
 			}
 			running = false;
@@ -238,6 +238,12 @@ public abstract class AbstractCheck implements Check {
 		}
 	}
 
+	protected void extension(CheckRun.Builder builder, RunContext context) {
+		// do nothing
+		// checks can extend other checks to get information
+		// or objects through the context
+	}
+
 	@Override
 	public void close() throws IOException {
 		log.debug("Closing check {}", id);
@@ -278,6 +284,6 @@ public abstract class AbstractCheck implements Check {
 	 *
 	 * @param builder
 	 */
-	protected abstract void doRun(CheckRun.Builder builder, CheckContext context) throws InterruptedException;
+	protected abstract void doRun(CheckRun.Builder builder, RunContext context) throws InterruptedException;
 
 }

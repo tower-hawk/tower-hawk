@@ -3,6 +3,7 @@ package org.towerhawk.monitor.check;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.spring.config.Configuration;
 
 /**
@@ -15,7 +16,7 @@ public class TestCheck extends AbstractCheck {
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) throws InterruptedException {
+	protected void doRun(CheckRun.Builder builder, RunContext runContext) throws InterruptedException {
 
 	}
 }

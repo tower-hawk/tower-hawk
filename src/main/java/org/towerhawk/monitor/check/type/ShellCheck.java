@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.CheckContext;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.serde.resolver.CheckType;
@@ -26,7 +26,7 @@ public class ShellCheck extends AbstractCheck {
 	private File dir;
 
 	@Override
-	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) {
+	protected void doRun(CheckRun.Builder builder, RunContext runContext) {
 		Process process = null;
 		try {
 			if (cmdList == null) {

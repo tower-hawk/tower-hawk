@@ -1,9 +1,9 @@
-package org.towerhawk.monitor.check;
+package org.towerhawk.monitor.check.run.context;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class DefaultCheckContext implements CheckContext {
+public class DefaultRunContext implements RunContext {
 
 	private boolean run = true;
 	private boolean saveCheckRun = true;
@@ -14,7 +14,7 @@ public class DefaultCheckContext implements CheckContext {
 		return run;
 	}
 
-	public DefaultCheckContext setShouldrun(boolean shouldRun) {
+	public DefaultRunContext setShouldrun(boolean shouldRun) {
 		this.run = shouldRun;
 		return this;
 	}
@@ -25,7 +25,7 @@ public class DefaultCheckContext implements CheckContext {
 	}
 
 	@Override
-	public CheckContext setSaveCheckRun(boolean saveCheckRun) {
+	public RunContext setSaveCheckRun(boolean saveCheckRun) {
 		this.saveCheckRun = saveCheckRun;
 		return this;
 	}
@@ -41,21 +41,21 @@ public class DefaultCheckContext implements CheckContext {
 	}
 
 	@Override
-	public CheckContext putContext(String key, Object val) {
+	public RunContext putContext(String key, Object val) {
 		context.put(key, val);
 		return this;
 	}
 
 	@Override
-	public CheckContext duplicate() {
+	public RunContext duplicate() {
 		return duplicate(this);
 	}
 
-	public static DefaultCheckContext duplicate(CheckContext checkContext) {
-		DefaultCheckContext duplicate = new DefaultCheckContext();
-		duplicate.setShouldrun(checkContext.shouldRun());
-		duplicate.setSaveCheckRun(checkContext.saveCheckRun());
-		duplicate.context.putAll(checkContext.getContext());
+	public static DefaultRunContext duplicate(RunContext runContext) {
+		DefaultRunContext duplicate = new DefaultRunContext();
+		duplicate.setShouldrun(runContext.shouldRun());
+		duplicate.setSaveCheckRun(runContext.saveCheckRun());
+		duplicate.context.putAll(runContext.getContext());
 		return duplicate;
 	}
 }

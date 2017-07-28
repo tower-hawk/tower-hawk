@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.towerhawk.monitor.check.filter.CheckFilter;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.CheckContext;
+import org.towerhawk.monitor.check.run.context.RunContext;
+import org.towerhawk.monitor.check.filter.CheckFilter;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunAggregator;
@@ -64,19 +64,19 @@ public class App extends AbstractCheck {
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) {
-		Object mapPredicate = checkContext.getContext().get(predicateKey());
+	protected void doRun(CheckRun.Builder builder, RunContext runContext) {
+		Object mapPredicate = runContext.getContext().get(predicateKey());
 		Collection<Check> checksToRun;
 		if (mapPredicate instanceof CheckFilter) {
 			checksToRun = getChecks().values().stream().filter(((CheckFilter) mapPredicate)::filter).collect(Collectors.toList());
-			checkContext.getContext().remove(predicateKey());
+			runContext.getContext().remove(predicateKey());
 			if (checksToRun.size() != getChecks().size()) {
-				checkContext.setSaveCheckRun(false);
+				runContext.setSaveCheckRun(false);
 			}
 		} else {
 			checksToRun = getChecks().values();
 		}
-		CheckContext context = checkContext.duplicate().setSaveCheckRun(true);
+		RunContext context = runContext.duplicate().setSaveCheckRun(true);
 		List<CheckRun> checkRuns = checkRunner.runChecks(checksToRun, context);
 		aggregateChecks(builder, checkRuns);
 	}

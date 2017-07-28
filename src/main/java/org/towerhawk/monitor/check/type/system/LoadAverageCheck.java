@@ -2,7 +2,7 @@ package org.towerhawk.monitor.check.type.system;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.towerhawk.monitor.check.CheckContext;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
@@ -24,7 +24,7 @@ public class LoadAverageCheck extends AbstractCheck {
 	}
 
 	@Override
-	protected void doRun(CheckRun.Builder builder, CheckContext checkContext) throws InterruptedException {
+	protected void doRun(CheckRun.Builder builder, RunContext runContext) throws InterruptedException {
 		builder.succeeded();
 		java.lang.management.OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
 		double loadAverage = os.getSystemLoadAverage();

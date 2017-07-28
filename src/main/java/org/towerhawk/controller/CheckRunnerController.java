@@ -11,7 +11,7 @@ import org.towerhawk.controller.exception.ResourceNotFoundException;
 import org.towerhawk.monitor.MonitorService;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.DefaultCheckContext;
+import org.towerhawk.monitor.check.run.context.DefaultRunContext;
 import org.towerhawk.monitor.check.filter.CheckFilter;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunSelector;
@@ -69,7 +69,7 @@ public class CheckRunnerController {
 		HttpServletRequest request
 	) {
 		CheckFilter checkFilter = new CheckFilter(priority, priorityLte, priorityGte, tags, notTags, type, notType, id, notId);
-		DefaultCheckContext checkContext = getContext(request);
+		DefaultRunContext checkContext = getContext(request);
 		checkContext.putContext(monitorService.predicateKey(), checkFilter);
 		CheckRun checkRun = monitorCheckRunner.runChecks(monitorCheck, checkContext).get(0);
 		return getCheckRunResponseEntity(checkRun, fields);
@@ -82,7 +82,7 @@ public class CheckRunnerController {
 		HttpServletRequest request
 	) {
 		App app = getApp(appId);
-		DefaultCheckContext checkContext = getContext(request);
+		DefaultRunContext checkContext = getContext(request);
 		CheckRun checkRun = appCheckRunner.runChecks(Arrays.asList(app), checkContext).get(0);
 		return getCheckRunResponseEntity(checkRun, fields);
 	}
@@ -95,7 +95,7 @@ public class CheckRunnerController {
 		HttpServletRequest request
 	) {
 		Check check = getCheck(appId, checkId);
-		DefaultCheckContext checkContext = getContext(request);
+		DefaultRunContext checkContext = getContext(request);
 		CheckRun checkRun = checkCheckRunner.runChecks(Arrays.asList(check), checkContext).get(0);
 		return getCheckRunResponseEntity(checkRun, fields);
 	}
@@ -125,7 +125,7 @@ public class CheckRunnerController {
 	) {
 		CheckFilter checkFilter = new CheckFilter(priority, priorityLte, priorityGte, tags, notTags, type, notType, id, notId);
 		CheckFilter appFilter = new CheckFilter(appPriority, appPriorityLte, appPriorityGte, appTags, appNotTags, appType, appNotType, appId, appNotId);
-		DefaultCheckContext checkContext = getContext(request);
+		DefaultRunContext checkContext = getContext(request);
 		checkContext.putContext(monitorService.appPredicateKey(), checkFilter);
 		checkContext.putContext(monitorService.predicateKey(), appFilter);
 		CheckRun checkRun = monitorCheckRunner.runChecks(monitorCheck, checkContext).get(0);
@@ -159,8 +159,8 @@ public class CheckRunnerController {
 		return check;
 	}
 
-	private DefaultCheckContext getContext(HttpServletRequest request) {
-		DefaultCheckContext checkContext = new DefaultCheckContext();
+	private DefaultRunContext getContext(HttpServletRequest request) {
+		DefaultRunContext checkContext = new DefaultRunContext();
 		checkContext.setShouldrun(shouldRun(request));
 		return checkContext;
 	}

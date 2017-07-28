@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.serde.resolver.CheckTypeResolver;
 import org.towerhawk.spring.config.Configuration;
 
@@ -41,10 +42,10 @@ public interface Check extends Comparable<Check>, Closeable {
 	 * a check can run (see canRun()) and if this method gets called concurrently
 	 * the second invocation can return the results of the first invocation.
 	 *
-	 * @param checkContext
+	 * @param runContext
 	 * @return The CheckRun representing the results of this run().
 	 */
-	CheckRun run(CheckContext checkContext);
+	CheckRun run(RunContext runContext);
 
 	/**
 	 * This determines whether the check is active right now or not. This allows different

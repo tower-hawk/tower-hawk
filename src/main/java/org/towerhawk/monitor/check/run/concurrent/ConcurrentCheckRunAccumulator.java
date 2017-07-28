@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
-class ConcurrentCheckRunAccumulator implements CheckRunAccumulator {
+public class ConcurrentCheckRunAccumulator implements CheckRunAccumulator {
 
 	private Collection<CheckRun> checkRuns = new ConcurrentSkipListSet<>();
 	private Set<Check> checkSet = new LinkedHashSet<>();

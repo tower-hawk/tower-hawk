@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.active.Enabled;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.CheckContext;
-import org.towerhawk.monitor.check.DefaultCheckContext;
+import org.towerhawk.monitor.check.run.context.RunContext;
+import org.towerhawk.monitor.check.run.context.DefaultRunContext;
 import org.towerhawk.monitor.check.run.CheckRunner;
-import org.towerhawk.monitor.check.run.concurrent.ConcurrentCheckRunner;
+import org.towerhawk.monitor.check.run.concurrent.AsynchronousCheckRunner;
 import org.towerhawk.monitor.reader.CheckDeserializer;
 import org.towerhawk.monitor.reader.CheckRefresher;
 import org.towerhawk.spring.config.Configuration;
@@ -30,14 +30,14 @@ import java.util.LinkedHashMap;
 public class MonitorService extends App {
 
 	private final CheckRunner checkCheckRunner;
-	private final CheckContext checkContext = new DefaultCheckContext();
+	private final RunContext runContext = new DefaultRunContext();
 	@Getter
 	private ZonedDateTime lastRefresh = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
 
 	@Inject
 	public MonitorService(Configuration configuration,
-												ConcurrentCheckRunner checkCheckRunner,
-												ConcurrentCheckRunner appCheckRunner) {
+												AsynchronousCheckRunner checkCheckRunner,
+												AsynchronousCheckRunner appCheckRunner) {
 		setConfiguration(configuration);
 		setCheckRunner(appCheckRunner);
 		this.checkCheckRunner = checkCheckRunner;
@@ -57,7 +57,7 @@ public class MonitorService extends App {
 			System.exit(1);
 		}
 		if (refreshed && getConfiguration().isRunChecksOnStartup() && !getConfiguration().isRunChecksOnRefresh()) {
-			run(checkContext);
+			run(runContext);
 		}
 	}
 
@@ -67,7 +67,7 @@ public class MonitorService extends App {
 			postProcess(newDefs);
 			checks = Collections.unmodifiableMap(newDefs.getApps());
 			if (getConfiguration().isRunChecksOnRefresh()) {
-				run(checkContext);
+				run(runContext);
 			}
 			lastRefresh = ZonedDateTime.now();
 		} catch (RuntimeException e) {
@@ -78,7 +78,7 @@ public class MonitorService extends App {
 	}
 
 	public App getApp(String appId) {
-		return (App) checks.get(appId);
+		return (App) getChecks().get(appId);
 	}
 
 	@Override
@@ -105,11 +105,11 @@ public class MonitorService extends App {
 	}
 
 	private void postProcess(CheckDeserializer checkDeserializer) {
-		Collection<Check> appsToClose = new ArrayList<>();
+		Collection<Check> appsToClose = new ArrayList<>(getChecks().size());
 		//initialize all checks first
 		checkDeserializer.getApps().forEach((id, app) -> {
 			app.setCheckRunner(checkCheckRunner);
-			Check previousApp = checks.get(app.getId());
+			Check previousApp = getChecks().get(app.getId());
 			app.init(previousApp, getConfiguration(), this, id);
 			if (previousApp != null) {
 				appsToClose.add(previousApp);

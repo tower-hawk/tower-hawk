@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.CheckContext;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.run.CheckRun;
 
 import java.util.ArrayList;
@@ -30,12 +30,12 @@ public class ConcurrentCheckRunner implements AsynchronousCheckRunner {
 	}
 
 	@Override
-	public ConcurrentCheckRunAccumulator runChecksAsync(Collection<Check> checks, CheckContext checkContext) {
+	public ConcurrentCheckRunAccumulator runChecksAsync(Collection<Check> checks, RunContext runContext) {
 		List<Check> checkList = new ArrayList<>(checks);
 		Collections.sort(checkList);
 		ConcurrentCheckRunAccumulator accumulator = new ConcurrentCheckRunAccumulator(checkList);
 		log.debug("Building handlers");
-		Collection<ConcurrentCheckRunHandler> handlers = checkList.stream().map(c -> new ConcurrentCheckRunHandler(c, accumulator, interruptor, checkContext)).collect(Collectors.toList());
+		Collection<ConcurrentCheckRunHandler> handlers = checkList.stream().map(c -> new ConcurrentCheckRunHandler(c, accumulator, interruptor, runContext)).collect(Collectors.toList());
 		handlers.forEach(h -> {
 			if (h.getCheck().canRun()) {
 				log.debug("Submitting handler for {}", h.getCheck().getFullName());
@@ -51,8 +51,8 @@ public class ConcurrentCheckRunner implements AsynchronousCheckRunner {
 	}
 
 	@Override
-	public List<CheckRun> runChecks(Collection<Check> checks, CheckContext checkContext) {
-		ConcurrentCheckRunAccumulator accumulator = runChecksAsync(checks, checkContext);
+	public List<CheckRun> runChecks(Collection<Check> checks, RunContext runContext) {
+		ConcurrentCheckRunAccumulator accumulator = runChecksAsync(checks, runContext);
 		try {
 			return accumulator.waitForChecks();
 		} catch (InterruptedException e) {

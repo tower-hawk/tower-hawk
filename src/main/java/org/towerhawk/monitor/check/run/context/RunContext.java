@@ -1,14 +1,14 @@
-package org.towerhawk.monitor.check;
+package org.towerhawk.monitor.check.run.context;
 
 import java.util.Map;
 
-public interface CheckContext {
+public interface RunContext {
 
 	/**
 	 * Whether or not the check should actually run. If false the check can return
 	 * a cached CheckRun even if it is outside of the cache window.
 	 *
-	 * @return
+	 * @return true if the check should actually run
 	 */
 	boolean shouldRun();
 
@@ -16,8 +16,15 @@ public interface CheckContext {
 	 * Whether or not to record this as the last check run. The is useful when an
 	 * App won't be running all of its checks, so it doesn't want to cache the results
 	 * of that as its last check run.
+	 * @return true if this checkRun should be saved
 	 */
 	boolean saveCheckRun();
+
+	/**
+	 *
+	 * @return the CompletionContext for this run
+	 */
+	CompletionContext getCompletionContext();
 
 	/**
 	 * Some checks should be able to determine whether or not they should be saved
@@ -28,7 +35,7 @@ public interface CheckContext {
 	 * @param saveCheckRun
 	 * @return
 	 */
-	CheckContext setSaveCheckRun(boolean saveCheckRun);
+	RunContext setSaveCheckRun(boolean saveCheckRun);
 
 	/**
 	 * @return A map with any context that a check can use to change its behavior.
@@ -48,7 +55,7 @@ public interface CheckContext {
 	 * @param val
 	 * @return
 	 */
-	CheckContext putContext(String key, Object val);
+	RunContext putContext(String key, Object val);
 
 	/**
 	 * Because check contexts can be modified, a new context should be created for each check
@@ -56,6 +63,6 @@ public interface CheckContext {
 	 *
 	 * @return
 	 */
-	CheckContext duplicate();
+	RunContext duplicate();
 
 }
