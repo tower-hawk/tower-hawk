@@ -5,12 +5,12 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunAggregator;
 import org.towerhawk.monitor.check.run.CheckRunner;
 import org.towerhawk.monitor.check.run.DefaultCheckRunAggregator;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.run.ordered.SynchronousCheckRunner;
 import org.towerhawk.monitor.check.type.system.LoadAverageCheck;
 import org.towerhawk.monitor.check.type.system.PhysicalMemoryCheck;
@@ -40,7 +40,7 @@ public class SystemCheck extends AbstractCheck {
 	private SwapSpaceCheck swapSpace = null;
 
 	public SystemCheck() {
-		setCacheMs(0);
+		setCacheMs(0L);
 	}
 
 	@Override

@@ -5,12 +5,15 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.Status;
 import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.serde.resolver.CheckTypeResolver;
 import org.towerhawk.spring.config.Configuration;
 
 import java.io.Closeable;
+import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -18,10 +21,6 @@ import java.util.Set;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
 @JsonTypeIdResolver(CheckTypeResolver.class)
 public interface Check extends Comparable<Check>, Closeable {
-
-	long CACHE_MS = -1;
-	long TIMEOUT_MS = -1;
-	byte PRIORITY = Byte.MIN_VALUE;
 
 	/**
 	 * The id for this check. This should match the dictionary key in the configuration yaml.
@@ -85,6 +84,27 @@ public interface Check extends Comparable<Check>, Closeable {
 	ZonedDateTime getFailingSince();
 
 	/**
+	 * The amount of time this check needs to fail before it will actually be reported.
+	 *
+	 * @return A duration representing how long this check needs to be failing for
+	 * before it is reported. If the duration has not passed, the ${@link CheckRun} will
+	 * be set to ${@link Status.SUCCEEDED}
+	 */
+	Duration getAllowedFailureDuration();
+
+	/**
+	 * @return If this check has been set to restarting. If it is restarting, then it will
+	 * not return anything other than ${@link Status.SUCCEEDED} until it has actually
+	 * completed successfully
+	 */
+	boolean isRestarting();
+
+	/**
+	 * @param restarting true if this check is restarting, false otherwise
+	 */
+	void setRestarting(boolean restarting);
+
+	/**
 	 * Checks with higher priorities must be run first. This method can also be called to
 	 * run checks with a certain priority.
 	 *
@@ -146,6 +166,25 @@ public interface Check extends Comparable<Check>, Closeable {
 	 * @return false if check will actually run, true if a cached CheckRun will be returned
 	 */
 	boolean isCached();
+
+	/**
+	 * Returns any checks that need to be run before this check. If all checks listed here
+	 * are successful then this check can be run
+	 *
+	 * @return a collection if there are dependencies a null or empty collection will be
+	 * ignored.
+	 */
+	Collection<Check> runAfterSuccess();
+
+	/**
+	 * Returns any checks that need to fail before this check should run. If any of the checks
+	 * have a {@link Status} that != SUCCEEDED then
+	 * this check can be run
+	 *
+	 * @return a collection if there are dependences that need to fail. A null or empty
+	 * return value will be ignored.
+	 */
+	Collection<Check> runAfterFailure();
 
 	/**
 	 * Determines if the check can run right now. The default implementation returns true

@@ -15,27 +15,6 @@ import java.util.Map;
 public interface CheckRun extends Comparable<CheckRun> {
 
 	/**
-	 * An enum representing the status of this CheckRun. They have ordering
-	 * so that the most critical runs get returned first.
-	 */
-	enum Status {
-		CRITICAL(0),
-		WARNING(1),
-		UNKNOWN(2),
-		SUCCEEDED(3);
-
-		int ordinal;
-
-		Status(int ordinal) {
-			this.ordinal = ordinal;
-		}
-
-		int getOrdinal() {
-			return ordinal;
-		}
-	}
-
-	/**
 	 * @return The status of this CheckRun.
 	 */
 	Status getStatus();

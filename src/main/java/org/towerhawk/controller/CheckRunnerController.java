@@ -7,30 +7,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.towerhawk.controller.exception.ResourceNotFoundException;
-import org.towerhawk.monitor.MonitorService;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.run.context.DefaultRunContext;
 import org.towerhawk.monitor.check.filter.CheckFilter;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunSelector;
+import org.towerhawk.monitor.check.run.Status;
 import org.towerhawk.monitor.check.run.concurrent.ConcurrentCheckRunner;
+import org.towerhawk.monitor.check.run.context.DefaultRunContext;
 import org.towerhawk.spring.config.Configuration;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping
 public class CheckRunnerController {
 
-	private final MonitorService monitorService;
+	private final ControllerMonitorServiceWrapper monitorServiceWrapper;
 	private final Configuration configuration;
 	private final ConcurrentCheckRunner checkCheckRunner;
 	private final ConcurrentCheckRunner appCheckRunner;
@@ -39,19 +37,18 @@ public class CheckRunnerController {
 
 	@Inject
 	public CheckRunnerController(
-		MonitorService monitorService,
+		ControllerMonitorServiceWrapper monitorServiceWrapper,
 		Configuration configuration,
 		ConcurrentCheckRunner checkCheckRunner,
 		ConcurrentCheckRunner appCheckRunner,
 		ConcurrentCheckRunner monitorCheckRunner
 	) {
-		this.monitorService = monitorService;
+		this.monitorServiceWrapper = monitorServiceWrapper;
 		this.configuration = configuration;
 		this.checkCheckRunner = checkCheckRunner;
 		this.appCheckRunner = appCheckRunner;
 		this.monitorCheckRunner = monitorCheckRunner;
-		monitorCheck = new ArrayList<>();
-		monitorCheck.add(monitorService);
+		monitorCheck = Collections.singletonList(monitorServiceWrapper.getMonitorService());
 	}
 
 	@RequestMapping(path = "/app", method = {RequestMethod.POST, RequestMethod.GET})
@@ -69,8 +66,8 @@ public class CheckRunnerController {
 		HttpServletRequest request
 	) {
 		CheckFilter checkFilter = new CheckFilter(priority, priorityLte, priorityGte, tags, notTags, type, notType, id, notId);
-		DefaultRunContext checkContext = getContext(request);
-		checkContext.putContext(monitorService.predicateKey(), checkFilter);
+		DefaultRunContext checkContext = monitorServiceWrapper.getContext(request);
+		checkContext.putContext(monitorServiceWrapper.getMonitorService().predicateKey(), checkFilter);
 		CheckRun checkRun = monitorCheckRunner.runChecks(monitorCheck, checkContext).get(0);
 		return getCheckRunResponseEntity(checkRun, fields);
 	}
@@ -81,8 +78,8 @@ public class CheckRunnerController {
 		@RequestParam(required = false) List<CheckRunSelector.Field> fields,
 		HttpServletRequest request
 	) {
-		App app = getApp(appId);
-		DefaultRunContext checkContext = getContext(request);
+		App app = monitorServiceWrapper.getApp(appId);
+		DefaultRunContext checkContext = monitorServiceWrapper.getContext(request);
 		CheckRun checkRun = appCheckRunner.runChecks(Arrays.asList(app), checkContext).get(0);
 		return getCheckRunResponseEntity(checkRun, fields);
 	}
@@ -94,8 +91,8 @@ public class CheckRunnerController {
 		@RequestParam(required = false) List<CheckRunSelector.Field> fields,
 		HttpServletRequest request
 	) {
-		Check check = getCheck(appId, checkId);
-		DefaultRunContext checkContext = getContext(request);
+		Check check = monitorServiceWrapper.getCheck(appId, checkId);
+		DefaultRunContext checkContext = monitorServiceWrapper.getContext(request);
 		CheckRun checkRun = checkCheckRunner.runChecks(Arrays.asList(check), checkContext).get(0);
 		return getCheckRunResponseEntity(checkRun, fields);
 	}
@@ -125,48 +122,21 @@ public class CheckRunnerController {
 	) {
 		CheckFilter checkFilter = new CheckFilter(priority, priorityLte, priorityGte, tags, notTags, type, notType, id, notId);
 		CheckFilter appFilter = new CheckFilter(appPriority, appPriorityLte, appPriorityGte, appTags, appNotTags, appType, appNotType, appId, appNotId);
-		DefaultRunContext checkContext = getContext(request);
-		checkContext.putContext(monitorService.appPredicateKey(), checkFilter);
-		checkContext.putContext(monitorService.predicateKey(), appFilter);
+		DefaultRunContext checkContext = monitorServiceWrapper.getContext(request);
+		checkContext.putContext(monitorServiceWrapper.getMonitorService().appPredicateKey(), checkFilter);
+		checkContext.putContext(monitorServiceWrapper.getMonitorService().predicateKey(), appFilter);
 		CheckRun checkRun = monitorCheckRunner.runChecks(monitorCheck, checkContext).get(0);
 		return getCheckRunResponseEntity(checkRun, fields);
 	}
 
 	@RequestMapping("/apps")
 	public Collection<String> getAppNames() {
-		return monitorService.getCheckNames();
+		return monitorServiceWrapper.getMonitorService().getCheckNames();
 	}
 
 	@RequestMapping("/apps/{appId}")
 	public Collection<String> getCheckNames(@PathVariable String appId) {
-		return getApp(appId).getCheckNames();
-	}
-
-	private App getApp(String appId) {
-		App app = monitorService.getApp(appId);
-		if (app == null) {
-			throw new ResourceNotFoundException("App " + appId + " not found");
-		}
-		return app;
-	}
-
-	private Check getCheck(String appId, String checkId) {
-		App app = getApp(appId);
-		Check check = app.getCheck(checkId);
-		if (check == null) {
-			throw new ResourceNotFoundException("Check " + checkId + " not found");
-		}
-		return check;
-	}
-
-	private DefaultRunContext getContext(HttpServletRequest request) {
-		DefaultRunContext checkContext = new DefaultRunContext();
-		checkContext.setShouldrun(shouldRun(request));
-		return checkContext;
-	}
-
-	private boolean shouldRun(HttpServletRequest request) {
-		return !"GET".equals(request.getMethod());
+		return monitorServiceWrapper.getApp(appId).getCheckNames();
 	}
 
 	private ResponseEntity<CheckRun> getCheckRunResponseEntity(CheckRun checkRun, Collection<CheckRunSelector.Field> fields) {
@@ -175,7 +145,7 @@ public class CheckRunnerController {
 		return ResponseEntity.status(responseCode).body(checkRun);
 	}
 
-	private int getResponseCode(CheckRun.Status status) {
+	private int getResponseCode(Status status) {
 		int responseCode;
 		switch (status) {
 			case SUCCEEDED:

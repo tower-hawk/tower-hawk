@@ -2,9 +2,9 @@ package org.towerhawk.monitor.check.type.system;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
 import org.towerhawk.serde.resolver.CheckType;
 
@@ -19,7 +19,7 @@ public class LoadAverageCheck extends AbstractCheck {
 	boolean loadRatio = true;
 
 	public LoadAverageCheck() {
-		setCacheMs(0);
+		setCacheMs(0L);
 		setThreshold(SimpleNumericThreshold.builder().warnUpper(2).critUpper(4).build());
 	}
 

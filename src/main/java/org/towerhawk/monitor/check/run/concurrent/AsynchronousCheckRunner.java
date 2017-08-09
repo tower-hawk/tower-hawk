@@ -1,9 +1,9 @@
 package org.towerhawk.monitor.check.run.concurrent;
 
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.run.CheckRunAccumulator;
 import org.towerhawk.monitor.check.run.CheckRunner;
+import org.towerhawk.monitor.check.run.context.RunContext;
 
 import java.util.Collection;
 

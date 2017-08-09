@@ -1,9 +1,9 @@
 package org.towerhawk.monitor.check.type.system;
 
 import com.sun.management.OperatingSystemMXBean;
-import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.threshold.SimpleNumericThreshold;
 import org.towerhawk.serde.resolver.CheckType;
 
@@ -13,7 +13,7 @@ import java.lang.management.ManagementFactory;
 public class PhysicalMemoryCheck extends AbstractCheck {
 
 	public PhysicalMemoryCheck() {
-		setCacheMs(0);
+		setCacheMs(0L);
 		setThreshold(SimpleNumericThreshold.builder().warnUpper(90).critUpper(95).build());
 	}
 

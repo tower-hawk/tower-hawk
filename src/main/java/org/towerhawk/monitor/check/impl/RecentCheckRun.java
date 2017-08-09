@@ -3,6 +3,7 @@ package org.towerhawk.monitor.check.impl;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.check.run.CheckRun;
 
 import java.util.ArrayDeque;
@@ -10,8 +11,21 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+@Slf4j
 @Accessors(chain = true)
 public class RecentCheckRun {
+
+	private static String propertyKey = "org.towerhawk.check.recentChecks.sizeLimit";
+	private static int defaultSizeLimit;
+
+	static {
+		try {
+			defaultSizeLimit = Integer.valueOf(System.getProperty(propertyKey, "10"));
+		} catch (Exception e) {
+			log.error("Unable to read property {} defaulting to 10", propertyKey, e);
+			defaultSizeLimit = 10;
+		}
+	}
 
 	@Getter
 	private int sizeLimit;
@@ -21,15 +35,12 @@ public class RecentCheckRun {
 	private CheckRun defaultCheckRun;
 
 	public RecentCheckRun() {
-		this.sizeLimit = 10;
+		sizeLimit = defaultSizeLimit;
 		recentCheckRuns = new ArrayDeque<>(sizeLimit);
 	}
 
-	public RecentCheckRun setSizeLimit(int sizeLimit) {
-		this.sizeLimit = sizeLimit;
-		if (this.sizeLimit < 1) {
-			this.sizeLimit = 1;
-		}
+	public RecentCheckRun setSizeLimit(int newSizelimit) {
+		sizeLimit = Math.max(newSizelimit, 1);
 		while (recentCheckRuns.size() > sizeLimit) {
 			recentCheckRuns.removeFirst().cleanUp();
 		}

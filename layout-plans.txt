@@ -1,8 +1,6 @@
 
-*/info returns info on the check rather than on the check run
-post to */restarting tells the app to only start alerting once checks have cleared
-
-eventually, machine learning on outputs or combined alerts should be able to predict alerts that are going to come up and take steps to avoid issues
+eventually, machine learning on outputs or combined alerts should be able to predict
+alerts that are going to come up and take steps to avoid issues
 Some alerts should have commands that can be run to fix any issues that may be happening.
 
 
@@ -16,8 +14,8 @@ TODO:
 
 /app? filters apply to apps
 /app/app1 runs a single app
-/app/app1/check/check1 runs a single check
-/check?tags=&priority-gt=2&notags&id=id1&type=type1&appPriority&appTags& filters apply to checks
+/app/app1/check1 runs a single check
+/check?tags=&priority-gt=2&notTags&id=id1&type=type1&appPriority&appTags& filters apply to checks
 /apps/names returns names
 /checks/names returns names
 

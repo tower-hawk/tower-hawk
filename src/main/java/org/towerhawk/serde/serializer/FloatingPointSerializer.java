@@ -18,7 +18,7 @@ public class FloatingPointSerializer extends StdSerializer<Number> {
 	public FloatingPointSerializer(Configuration configuration) {
 		super(Number.class);
 		StringBuilder sb = new StringBuilder("#.");
-		for (int i = 0; i < configuration.getDoubleSerializationPrecision(); i++) {
+		for (int i = 0; i < configuration.getFloatingPointSerializationPrecision(); i++) {
 			sb.append("#");
 		}
 		String stringFormat = sb.toString();

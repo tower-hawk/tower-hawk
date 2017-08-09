@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
+import org.towerhawk.monitor.check.TestCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.spring.config.Configuration;
 
@@ -18,9 +19,7 @@ public class RecentCheckRunTest {
 
 	@Before
 	public void setup() {
-		App app = new App();
-		app.init(null, new Configuration(), app, "RecentCheckRunTest");
-		check = app;
+		check = new TestCheck("RecentCheckRunTest");
 		checkRun = CheckRun.builder(check).message("Testing RecentCheckRun").succeeded().build();
 	}
 

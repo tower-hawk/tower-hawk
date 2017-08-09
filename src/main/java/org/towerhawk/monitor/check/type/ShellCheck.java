@@ -4,9 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.serde.resolver.CheckType;
 import org.towerhawk.spring.config.Configuration;
 
@@ -29,13 +29,8 @@ public class ShellCheck extends AbstractCheck {
 	protected void doRun(CheckRun.Builder builder, RunContext runContext) {
 		Process process = null;
 		try {
-			if (cmdList == null) {
-				log.info("Running shell check with cmd = '{}'", cmd);
-				process = Runtime.getRuntime().exec(cmd, envArray, dir);
-			} else {
-				log.info("Running shell check with cmdList = {}", (Object) cmdList);
-				process = Runtime.getRuntime().exec(cmdList, envArray, dir);
-			}
+			log.info("Running shell check with cmdList = {}", (Object) cmdList);
+			process = Runtime.getRuntime().exec(cmdList, envArray, dir);
 			process.waitFor();
 			switch (process.exitValue()) {
 				case 0:
@@ -78,6 +73,11 @@ public class ShellCheck extends AbstractCheck {
 		}
 		if (workDir != null) {
 			dir = Paths.get(workDir).toFile();
+		}
+		if (cmdList == null || cmdList.length == 0) {
+			cmdList = new String[configuration.getShellEntry().size() + 1];
+			configuration.getShellEntry().toArray(cmdList);
+			cmdList[cmdList.length - 1] = cmd;
 		}
 	}
 

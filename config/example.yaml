@@ -9,21 +9,28 @@ apps:
       - java
     checks:
       port2181:
-        type: port
+        type: portResponse
         alias: zkPort
         priority: 2
         timeoutMs: 2000
         host: localhost
         port: 2181
+        threshold:
+          warning:
+            upper: 1000
+          critical:
+            upper: 3000
+          addContext: true
         send: ruok
-        expectRegex: imok
-        includeOutputInContext: true
+        response:
+          regex: imok
+          addContext: true
+          setMessage: true
         activeCheck:
           type: daily
           startTime: 09:00:59.234567891
           endTime: 17:00:03.345678901
           timeFormat: HH:mm:ss.SSSSSSSSS
-        matchIsCritical: false
         unknownIsCritical: false
         tags:
           - tcp
@@ -32,7 +39,7 @@ apps:
         alias: zkProcess
         priority: 1
         timeoutMs: 3000
-        cmd: '/tmp/testCheck.sh'
+        cmd: 'echo $SOME_VAR - $OTHER_VAR'
         env:
           SOME_VAR: someValue
           OTHER_VAR: otherValue

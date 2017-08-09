@@ -16,15 +16,10 @@ public interface RunContext {
 	 * Whether or not to record this as the last check run. The is useful when an
 	 * App won't be running all of its checks, so it doesn't want to cache the results
 	 * of that as its last check run.
+	 *
 	 * @return true if this checkRun should be saved
 	 */
 	boolean saveCheckRun();
-
-	/**
-	 *
-	 * @return the CompletionContext for this run
-	 */
-	CompletionContext getCompletionContext();
 
 	/**
 	 * Some checks should be able to determine whether or not they should be saved
@@ -36,6 +31,11 @@ public interface RunContext {
 	 * @return
 	 */
 	RunContext setSaveCheckRun(boolean saveCheckRun);
+
+	/**
+	 * @return the CompletionManager for this run
+	 */
+	CompletionManager getCompletionManager();
 
 	/**
 	 * @return A map with any context that a check can use to change its behavior.
@@ -57,12 +57,23 @@ public interface RunContext {
 	 */
 	RunContext putContext(String key, Object val);
 
+	default RunContext duplicate() {
+		return duplicate(this);
+	}
+
 	/**
 	 * Because check contexts can be modified, a new context should be created for each check
 	 * This is the method that should be called to get a new object just like the current object
 	 *
 	 * @return
 	 */
-	RunContext duplicate();
+	static RunContext duplicate(RunContext runContext) {
+		DefaultRunContext duplicate = new DefaultRunContext();
+		duplicate.setShouldrun(runContext.shouldRun());
+		duplicate.setSaveCheckRun(runContext.saveCheckRun());
+		duplicate.getContext().putAll(runContext.getContext());
+		duplicate.setCompletionContext(runContext.getCompletionManager());
+		return duplicate;
+	}
 
 }
