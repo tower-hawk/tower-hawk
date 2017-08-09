@@ -2,8 +2,10 @@ package org.towerhawk.monitor.check.threshold;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.Status;
 import org.towerhawk.serde.resolver.ThresholdType;
 
 import java.util.regex.Pattern;
@@ -14,18 +16,12 @@ public class RegexThreshold implements Threshold {
 	protected Pattern successRegex;
 	protected Pattern warningRegex;
 	protected Pattern criticalRegex;
+
+	@Getter
 	protected boolean addContext = true;
+
+	@Getter
 	protected boolean setMessage = true;
-
-	@Override
-	public boolean isAddContext() {
-		return addContext;
-	}
-
-	@Override
-	public boolean isSetMessage() {
-		return setMessage;
-	}
 
 	@JsonCreator
 	public RegexThreshold(
@@ -49,23 +45,27 @@ public class RegexThreshold implements Threshold {
 	}
 
 	@Override
-	public CheckRun.Status evaluate(CheckRun.Builder builder, double value) {
+	public Status evaluate(CheckRun.Builder builder, double value) {
 		return evaluate(builder, String.valueOf(value));
 	}
 
 	@Override
-	public CheckRun.Status evaluate(CheckRun.Builder builder, String value) {
+	public Status evaluate(CheckRun.Builder builder, String value) {
 		if ( criticalRegex != null && criticalRegex.matcher(value).find() ) {
 			addContextAndMessage(builder, "criticalThreshold", value);
-			return CheckRun.Status.CRITICAL;
+			builder.critical();
+			return Status.CRITICAL;
 		} else if ( warningRegex != null && warningRegex.matcher(value).find() ) {
 			addContextAndMessage(builder, "warningThreshold", value);
-			return CheckRun.Status.WARNING;
+			builder.warning();
+			return Status.WARNING;
 		} else if ( successRegex != null && successRegex.matcher(value).find() ) {
-			return CheckRun.Status.SUCCEEDED;
+			builder.succeeded();
+			return Status.SUCCEEDED;
 		}
 
-		return CheckRun.Status.UNKNOWN;
+		builder.unknown();
+		return Status.UNKNOWN;
 	}
 
 	protected void addContextAndMessage(CheckRun.Builder builder, String keyName, String value) {
@@ -79,7 +79,7 @@ public class RegexThreshold implements Threshold {
 	}
 
 	@Override
-	public CheckRun.Status evaluate(CheckRun.Builder builder, Object value) {
+	public Status evaluate(CheckRun.Builder builder, Object value) {
 		return evaluate(builder, String.valueOf(value));
 	}
 }

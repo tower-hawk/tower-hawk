@@ -25,6 +25,7 @@ import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.Status;
 import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.threshold.Threshold;
 import org.towerhawk.serde.resolver.CheckType;
@@ -43,7 +44,7 @@ public class HttpCheck extends AbstractCheck {
 	protected String method = "GET";
 	protected String body;
 	protected Auth auth = new Auth();
-	protected boolean includeResponseInContext = true;
+	protected boolean includeResponseInResult = true;
 
 	protected HttpComponentsClientHttpRequestFactory requestFactory;
 
@@ -73,16 +74,24 @@ public class HttpCheck extends AbstractCheck {
 		try (ClientHttpResponse response = getClientHttpRequest().execute(); ){
 			Threshold t = getThreshold();
 			String asString = IOUtils.toString(response.getBody(), StandardCharsets.UTF_8);
-			if ( includeResponseInContext ) {
-				context.putContext("org.towerhawk.monitor.check.type.http.httpResponse", asString);
+			if (includeResponseInResult) {
+				builder.addContext("httpResponse", asString);
 			}
-			CheckRun.Status status = t.evaluate(builder, asString);
-			if ( status == CheckRun.Status.SUCCEEDED ) {
+			Object processed = processResponse(asString);
+			Status status = t.evaluate(builder, processed);
+			if ( status == Status.SUCCEEDED ) {
 				builder.succeeded().addContext("connection", String.format("Connection to %s successful", endpoint));
 			}
 		} catch ( IOException e ) {
 			throw new IllegalStateException(e);
 		}
+	}
+
+	// If someone wants to work on this. We should be able to specify a
+	// response processor, which converts the http response, or at least
+	// the body, into something stronger than a string
+	protected Object processResponse(String response) {
+		return response;
 	}
 
 	@Override
@@ -104,13 +113,10 @@ public class HttpCheck extends AbstractCheck {
 		super.init(check, configuration, app, id);
 	}
 
+	@Getter
+	@Setter
 	public class Auth {
-		@Getter
-		@Setter
 		protected String username;
-
-		@Getter
-		@Setter
 		protected String password;
 	}
 }
