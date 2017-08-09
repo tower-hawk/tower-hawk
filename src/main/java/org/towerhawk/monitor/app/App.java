@@ -40,6 +40,11 @@ public class App extends AbstractCheck {
 	protected CheckRunner checkRunner;
 
 	public App() {
+		this(null);
+	}
+
+	public App(Map<String, Check> checks) {
+		this.checks = checks;
 		setType("app");
 	}
 

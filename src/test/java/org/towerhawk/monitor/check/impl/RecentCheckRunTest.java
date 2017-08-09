@@ -7,8 +7,10 @@ import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
 import org.towerhawk.monitor.check.TestCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.type.constant.SuccessfulCheck;
 import org.towerhawk.spring.config.Configuration;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
