@@ -39,6 +39,16 @@ public class ConcurrentCheckRunAccumulator implements CheckRunAccumulator {
 		}
 	}
 
+	public void ignore(Check check) {
+		try {
+			checkSet.remove(check);
+		} catch (Exception e) {
+			log.error("Unable to remove check {} from accumulator", check.getFullName(), e);
+		} finally {
+			latch.countDown();
+		}
+	}
+
 	public ConcurrentCheckRunAccumulator(Collection<Check> checks) {
 		checkSet.addAll(checks);
 		latch = new CountDownLatch(checkSet.size());

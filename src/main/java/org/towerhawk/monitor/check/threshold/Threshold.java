@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.Status;
 import org.towerhawk.serde.resolver.ThresholdTypeResolver;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -15,9 +16,9 @@ public interface Threshold {
 
 	boolean isSetMessage();
 
-	CheckRun.Status evaluate(CheckRun.Builder builder, double value);
+	Status evaluate(CheckRun.Builder builder, double value);
 
-	CheckRun.Status evaluate(CheckRun.Builder builder, String value);
+	Status evaluate(CheckRun.Builder builder, String value);
 
-	CheckRun.Status evaluate(CheckRun.Builder builder, Object value);
+	Status evaluate(CheckRun.Builder builder, Object value);
 }

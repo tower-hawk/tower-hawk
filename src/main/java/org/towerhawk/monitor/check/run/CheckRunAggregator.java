@@ -8,9 +8,9 @@ public interface CheckRunAggregator {
 
 	default void aggregate(CheckRun.Builder builder, Collection<CheckRun> checkRuns, String succeededMessage, String delimiter) {
 		List<CheckRun> filteredCheckRuns;
-		if ((filteredCheckRuns = checkRuns.stream().filter(r -> r.getStatus() == CheckRun.Status.CRITICAL).collect(Collectors.toList())).size() > 0) {
+		if ((filteredCheckRuns = checkRuns.stream().filter(r -> r.getStatus() == Status.CRITICAL).collect(Collectors.toList())).size() > 0) {
 			builder.critical();
-		} else if ((filteredCheckRuns = checkRuns.stream().filter(r -> r.getStatus() == CheckRun.Status.WARNING).collect(Collectors.toList())).size() > 0) {
+		} else if ((filteredCheckRuns = checkRuns.stream().filter(r -> r.getStatus() == Status.WARNING).collect(Collectors.toList())).size() > 0) {
 			builder.warning();
 		} else {
 			builder.succeeded();

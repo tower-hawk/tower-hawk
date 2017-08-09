@@ -8,6 +8,7 @@ public class DefaultRunContext implements RunContext {
 	private boolean run = true;
 	private boolean saveCheckRun = true;
 	private Map<String, Object> context = new HashMap<>(2);
+	private CompletionManager completionManager;
 
 	@Override
 	public boolean shouldRun() {
@@ -31,6 +32,16 @@ public class DefaultRunContext implements RunContext {
 	}
 
 	@Override
+	public CompletionManager getCompletionManager() {
+		return completionManager;
+	}
+
+	public RunContext setCompletionContext(CompletionManager completionManager) {
+		this.completionManager = completionManager;
+		return this;
+	}
+
+	@Override
 	public Map<String, Object> getContext() {
 		return context;
 	}
@@ -44,18 +55,5 @@ public class DefaultRunContext implements RunContext {
 	public RunContext putContext(String key, Object val) {
 		context.put(key, val);
 		return this;
-	}
-
-	@Override
-	public RunContext duplicate() {
-		return duplicate(this);
-	}
-
-	public static DefaultRunContext duplicate(RunContext runContext) {
-		DefaultRunContext duplicate = new DefaultRunContext();
-		duplicate.setShouldrun(runContext.shouldRun());
-		duplicate.setSaveCheckRun(runContext.saveCheckRun());
-		duplicate.context.putAll(runContext.getContext());
-		return duplicate;
 	}
 }

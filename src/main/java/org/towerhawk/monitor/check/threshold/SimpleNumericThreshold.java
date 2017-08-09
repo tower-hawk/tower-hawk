@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.Status;
 import org.towerhawk.monitor.check.threshold.builder.SimpleNumericBuilder;
 import org.towerhawk.monitor.check.threshold.eval.NumericThresholdEvaluator;
 import org.towerhawk.serde.resolver.ThresholdType;
@@ -78,7 +79,7 @@ public class SimpleNumericThreshold implements Threshold {
 	}
 
 	@Override
-	public CheckRun.Status evaluate(CheckRun.Builder builder, double value) {
+	public Status evaluate(CheckRun.Builder builder, double value) {
 		if (criticalThreshold.evaluate(value)) {
 			builder.critical();
 			if (isAddContext()) {
@@ -87,7 +88,7 @@ public class SimpleNumericThreshold implements Threshold {
 			if (isSetMessage()) {
 				builder.message(criticalThreshold.evaluateReason(value));
 			}
-			return CheckRun.Status.CRITICAL;
+			return Status.CRITICAL;
 		} else if (warningThreshold.evaluate(value)) {
 			builder.warning();
 			if (isAddContext()) {
@@ -96,25 +97,25 @@ public class SimpleNumericThreshold implements Threshold {
 			if (isSetMessage()) {
 				builder.message(warningThreshold.evaluateReason(value));
 			}
-			return CheckRun.Status.WARNING;
+			return Status.WARNING;
 		}
 		builder.succeeded();
-		return CheckRun.Status.SUCCEEDED;
+		return Status.SUCCEEDED;
 	}
 
 	@Override
-	public CheckRun.Status evaluate(CheckRun.Builder builder, String value) {
+	public Status evaluate(CheckRun.Builder builder, String value) {
 		try {
 			double val = Double.valueOf(value);
 			return evaluate(builder, val);
 		} catch (Exception e) {
 			builder.critical().error(new IllegalArgumentException("Cannot coerce value of type " + value.getClass() + " to Number", e));
-			return CheckRun.Status.CRITICAL;
+			return Status.CRITICAL;
 		}
 	}
 
 	@Override
-	public CheckRun.Status evaluate(CheckRun.Builder builder, Object value) {
+	public Status evaluate(CheckRun.Builder builder, Object value) {
 		try {
 			if (value instanceof Number) {
 				double val = ((Number) value).doubleValue();
@@ -125,7 +126,7 @@ public class SimpleNumericThreshold implements Threshold {
 		} catch (Exception e) {
 			builder.critical().error(new IllegalArgumentException("Cannot coerce value of type " + value.getClass() + " to Number", e));
 		}
-		return CheckRun.Status.CRITICAL;
+		return Status.CRITICAL;
 	}
 
 	public static SimpleNumericBuilder builder() {

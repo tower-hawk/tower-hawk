@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.active.Enabled;
 import org.towerhawk.monitor.app.App;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.run.context.RunContext;
-import org.towerhawk.monitor.check.run.context.DefaultRunContext;
 import org.towerhawk.monitor.check.run.CheckRunner;
 import org.towerhawk.monitor.check.run.concurrent.AsynchronousCheckRunner;
+import org.towerhawk.monitor.check.run.context.DefaultRunContext;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.reader.CheckDeserializer;
 import org.towerhawk.monitor.reader.CheckRefresher;
 import org.towerhawk.spring.config.Configuration;
@@ -84,10 +84,10 @@ public class MonitorService extends App {
 	@Override
 	public void init(Check check, Configuration configuration, App app, String id) {
 		setActive(new Enabled());
-		super.init(check, configuration, app, id);
-		setTimeoutMs(configuration.getHardTimeoutLimit());
+		setTimeoutMs(configuration.getHardTimeoutMsLimit());
+		setCacheMs(0L);
 		setPriority(Byte.MAX_VALUE);
-
+		super.init(check, configuration, app, id);
 	}
 
 	@Override

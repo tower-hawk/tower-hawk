@@ -1,9 +1,9 @@
 package org.towerhawk.monitor.check.run.ordered;
 
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunner;
+import org.towerhawk.monitor.check.run.context.RunContext;
 
 import java.util.Collection;
 import java.util.List;

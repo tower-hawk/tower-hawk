@@ -4,14 +4,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.towerhawk.monitor.check.TestCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
+import org.towerhawk.monitor.check.run.Status;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
-import static org.towerhawk.monitor.check.run.CheckRun.Status.CRITICAL;
-import static org.towerhawk.monitor.check.run.CheckRun.Status.SUCCEEDED;
-import static org.towerhawk.monitor.check.run.CheckRun.Status.WARNING;
+import static org.towerhawk.monitor.check.run.Status.CRITICAL;
+import static org.towerhawk.monitor.check.run.Status.SUCCEEDED;
+import static org.towerhawk.monitor.check.run.Status.WARNING;
 
 public class NagiosSyntaxThresholdTest {
 
@@ -25,7 +26,7 @@ public class NagiosSyntaxThresholdTest {
 	@Test
 	public void evaluateDouble() throws Exception {
 		//warn if < 10 critical if > 10
-		Map<Integer, CheckRun.Status> expected = new LinkedHashMap<>();
+		Map<Integer, Status> expected = new LinkedHashMap<>();
 		Threshold threshold = new NagiosSyntaxThreshold("10", "20");
 		expected.put(-1, CRITICAL);
 		expected.put(5, SUCCEEDED);
@@ -58,7 +59,7 @@ public class NagiosSyntaxThresholdTest {
 		evaluateMultiple(threshold, expected);
 	}
 
-	private void evaluateMultiple(Threshold threshold, Map<Integer, CheckRun.Status> expected) {
+	private void evaluateMultiple(Threshold threshold, Map<Integer, Status> expected) {
 		expected.forEach((k, v) -> {
 			builder.forceSucceeded();
 			threshold.evaluate(builder, k.doubleValue());
