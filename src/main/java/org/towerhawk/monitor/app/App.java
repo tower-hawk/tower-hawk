@@ -5,13 +5,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.towerhawk.monitor.check.Check;
-import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.monitor.check.filter.CheckFilter;
 import org.towerhawk.monitor.check.impl.AbstractCheck;
 import org.towerhawk.monitor.check.run.CheckRun;
 import org.towerhawk.monitor.check.run.CheckRunAggregator;
 import org.towerhawk.monitor.check.run.CheckRunner;
 import org.towerhawk.monitor.check.run.DefaultCheckRunAggregator;
+import org.towerhawk.monitor.check.run.context.RunContext;
 import org.towerhawk.spring.config.Configuration;
 
 import java.io.IOException;
@@ -40,6 +40,11 @@ public class App extends AbstractCheck {
 	protected CheckRunner checkRunner;
 
 	public App() {
+		this(null);
+	}
+
+	public App(Map<String, Check> checks) {
+		this.checks = checks;
 		setType("app");
 	}
 
