@@ -84,13 +84,14 @@ public class JmxCheck extends AbstractCheck {
 				log.error("Unable to evaluate threshold for {} of class {}", attributeResult, attributeResult.getClass(), e);
 			}
 		} catch (Exception e) {
+			connectionCreation = 0; // force connection retry on next run
 			log.error("Error while communicating with server {}", url, e);
 			builder.critical().error(e);
 		}
 	}
 
 	private void maybeRefreshConnection() {
-		if (System.currentTimeMillis() - connectionCreation > getConfiguration().getJMXConnectionRefreshMs()) {
+		if (connectionCreation == 0 || System.currentTimeMillis() - connectionCreation > getConfiguration().getJMXConnectionRefreshMs()) {
 			refreshConnection();
 		}
 	}
@@ -119,11 +120,15 @@ public class JmxCheck extends AbstractCheck {
 	@SneakyThrows
 	public void init(Check check, Configuration configuration, App app, String id) {
 		super.init(check, configuration, app, id);
-		resolveUrl(configuration);
-		resolveMbeanPath(configuration);
-		resolveBaseMbeanPath(configuration);
-		serviceUrl = new JMXServiceURL(connectionString);
-		refreshConnection();
+		try {
+			resolveUrl(configuration);
+			resolveMbeanPath(configuration);
+			resolveBaseMbeanPath(configuration);
+			serviceUrl = new JMXServiceURL(connectionString);
+			refreshConnection();
+		} catch ( Exception e ) {
+			log.warn("Could not connect to JMX at startup--this check will fail until the service is available");
+		}
 	}
 
 	protected final void refreshConnection() {
