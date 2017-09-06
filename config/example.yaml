@@ -90,7 +90,7 @@ apps:
         loadAverage:
           threshold:
             type: nagios
-            warning: ~:0
+            warning: ~:0.9
             critical: ~:1
             setMessage: true
   test:
