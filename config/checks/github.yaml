@@ -1,0 +1,38 @@
+#github:
+#  alias: github.com
+#  cacheMs: 5000
+#  defaultCacheMs: 10000
+#  timeoutMs: 100000
+#  defaultTimeoutMs: 10000
+#  priority: 0
+#  tags:
+#    - http
+#    - git
+#  checks:
+#    commits:
+#      timeoutMs: 200000
+#      executor:
+#        type: http
+#        method: GET
+#        endpoint: https://api.github.com/repos/tower-hawk/tower-hawk/commits?per_page=5
+#        includeResponseInResult: false
+#        headers:
+#          X-Custom: towerhawk check
+#      tags: []
+#      evaluator:
+#        type: regex
+#        result:
+#          transform:
+#            type: jq
+#            query: '.[] | {"sha": .sha}'
+#          threshold:
+#            warning:
+#              lower: 3
+#            critical:
+#              lower: 5
+#        status:
+#          threshold:
+#            warning:
+#              lower: 400
+#            critical:
+#              lower: 500

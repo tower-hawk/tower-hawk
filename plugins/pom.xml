@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>towerhawk-plugins</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Towerhawk Plugins Parent</name>
+
+    <parent>
+        <groupId>org.towerhawk</groupId>
+        <artifactId>towerhawk</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../</relativePath>
+    </parent>
+
+    <properties>
+        <plugin.id>${project.artifactId}</plugin.id>
+        <plugin.version>${project.version}</plugin.version>
+        <plugin.provider>Towerhawk</plugin.provider>
+        <!-- empty on purpose so "null" isn't added to MANIFEST.MF due to bug in maven-shade-plugin -->
+        <plugin.dependencies>,</plugin.dependencies>
+        <plugin.class>org.towerhawk.plugin.TowerhawkPlugin</plugin.class>
+    </properties>
+
+    <modules>
+        <module>cron-schedule</module>
+        <module>groovy</module>
+        <module>http</module>
+        <module>influxdb</module>
+        <module>jq</module>
+        <module>kafka</module>
+        <module>oshi</module>
+        <module>zookeeper</module>
+    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.towerhawk</groupId>
+            <artifactId>towerhawk-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <executions>
+                        <execution>
+                            <id>scala-compile-first</id>
+                            <phase>process-resources</phase>
+                            <goals>
+                                <goal>add-source</goal>
+                                <goal>compile</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>scala-test-compile</id>
+                            <phase>process-test-resources</phase>
+                            <goals>
+                                <goal>testCompile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.1.0</version>
+
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <finalName>${project.artifactId}-${project.version}-plugin</finalName>
+                    <keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
+
+                    <artifactSet>
+                        <excludes>
+                            <exclude>org.slf4j:*</exclude>
+                            <exclude>org.projectlombok:lombok</exclude>
+                            <exclude>org.apache.log4j:*</exclude>
+                            <exclude>log4j:*</exclude>
+                            <exclude>ch.qos.logback:*</exclude>
+                            <exclude>com.fasterxml.jackson.core:jackson-core</exclude>
+                            <exclude>com.fasterxml.jackson.core:jackson-annotations</exclude>
+                            <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
+                        </excludes>
+                    </artifactSet>
+
+                    <transformers combine.self="override">
+                        <transformer
+                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <manifestEntries>
+                                <Plugin-Id>${plugin.id}</Plugin-Id>
+                                <Plugin-Version>${plugin.version}</Plugin-Version>
+                                <Plugin-Provider>${plugin.provider}</Plugin-Provider>
+                                <Plugin-Class>${plugin.class}</Plugin-Class>
+                                <Plugin-Dependencies>${plugin.dependencies}</Plugin-Dependencies>
+                            </manifestEntries>
+                        </transformer>
+                    </transformers>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.2</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/../plugins</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>target/</directory>
+                                    <includes>
+                                        <include>*-plugin.jar</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>original*</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.2</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}/plugins</directory>
+                            <includes>
+                                <include>**/*.jar</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

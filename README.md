@@ -1,2 +1,2 @@
-# tower-hawk
+# towerhawk
 A declarative monitoring app

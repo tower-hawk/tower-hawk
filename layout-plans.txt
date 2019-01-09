@@ -5,7 +5,15 @@ Some alerts should have commands that can be run to fix any issues that may be h
 
 
 TODO:
-  Create classes to use for serialization so different implementations don't need to care
+  Make transforms a map, reduce, or flat-map transform
+  Corrective action for Checks that have been failing for some Duration
+  Front-end for building checks with possible integrated check in
+  Monitor clustering and coordination so that checks can be executed only once
+      for cluster level checks
+  Only reload checks that are defined in a certain file.
+  Get a way to uniquely identify a towerhawk server
+  Fix initialization and config. It feels really messy.
+
   Write more check classes
   Finish api endpoints
   Write documentation

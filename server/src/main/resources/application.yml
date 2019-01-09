@@ -1,0 +1,11 @@
+server:
+  port: 4295
+
+towerhawk:
+  checkRunnerThreadPool:
+    corePoolSize: 10
+    maxPoolSize: 10
+  appRunnerThreadPool:
+    corePoolSize: 3
+    maxPoolSize: 3
+

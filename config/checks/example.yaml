@@ -1,0 +1,240 @@
+#apps:
+#  zookeeper:
+#    cacheMs: 10000
+#    defaultCacheMs: 10000
+#    timeoutMs: 1000
+#    defaultTimeoutMs: 1000
+#    priority: 10
+#    checks:
+#      telnet:
+#        cacheMs: 2000
+#        executor:
+#          type: portcheck
+#          port: 2181
+#          send: mntr
+#        evaluator:
+#          type: regex
+#          .*:
+#            transform:
+#              type: logger
+
+#  kafka:
+#    cacheMs: 10000
+#    defaultCacheMs: 1000
+#    timeoutMs: 3000
+#    defaultTimeoutMs: 3000
+#    settings:
+#      priority: 10
+#      cluster:
+#        type: default
+#    checks:
+#      lag:
+#        cluster:
+#          type: zookeeper
+#          zkConnect: zookeeper.bravo:2181/towerhawk
+#          name: localhost-1
+#          maxLeadershipTimeMs: 30000
+#          enableExecuteOnConnectionFailure: true
+#        schedule:
+#          type: multi
+#          schedules:
+##            - duration: PT15S
+#            - type: quartz
+#              cron: "*/10 * * * * ? *"
+##            - type: cron
+##              cron: "* * * * *"
+#        executor:
+#          type: kafkaConsumerLag
+#          brokers: host-4.tp.ax.vivintsky.com:9092
+#          group: platform-cache
+#          blacklistTopics:
+#            - blah
+#        evaluator:
+#          type: regex
+#          .*:
+#            transform:
+#              type: logger
+#          result:
+#            transform:
+#              type: kafkaProducer
+#              topic: influxdb_telegraf
+#              brokerList: kafka.bravo:9092
+#              preProduceTransform:
+#                type: influxFormat
+#                metricName: kafkaLag
+#                fields:
+#                  - lag
+#                  - logEndOffset
+#                  - offset
+#                tags:
+#                  - group
+#                  - topic
+#                  - partition
+#                  - clientId
+#                  - consumerId
+#                  - host
+#                  - coordinatorId
+#                  - coordinatorHost
+
+
+#  druid:
+#    alias: apache-druid
+#    cacheMs: 1000
+#    defaultCacheMs: 1000
+#    timeoutMs: 500000
+#    defaultTimeoutMs: 100000
+#    priority: 0
+#    tags:
+#      - http
+#      - java
+#      - test
+#    checks:
+##      uniqueUsers:
+##        timeoutMs: 1000
+##        type: http
+##        method: POST
+##        endpoint: localhost:8082/druid/v2
+##        headers:
+##          Content-Type: application/json
+##        body: '{"aggregations": [{"name": "unique_users","type": "hyperUnique","fieldName": "user_unique"}],"dataSource": "wikiticker","intervals": "2010-12-08T00:00:00+00:00/2017-12-08T16:26:12+00:00","queryType": "timeseries","granularity": {"type": "period","timeZone": "UTC","period": "PT1H"},"postAggregations": []}'
+##        includeResponseInResult: false
+##        transforms:
+##          - type: js
+##            name: jsTest
+##            function: test
+##            script: |
+##              var test = function(obj) {
+##                print("##################################################");
+##                print(obj);
+##                print("##################################################");
+##                return obj;
+##              };
+##          - type: logger
+##            name: test
+##            level: error
+##          - type: jq
+##            query: '[.[] | .result.unique_users] | add / length'
+##          - type: double
+##        threshold:
+##          warning:
+##            upper: 1000
+##          critical:
+##            upper: 10000
+##      lastIndex:
+##        type: http
+##        method: post
+##        endpoint: localhost:8082/druid/v2
+##        headers:
+##          Content-Type: application/json
+##        body: '{"queryType" : "dataSourceMetadata","dataSource": "metrics"}'
+#      js:
+#        type: js
+#        name: js check
+#        file: /tmp/test.js
+#  zookeeper:
+#    alias: zk
+#    cacheMs: 10000
+#    defaultCacheMs: 1000
+#    timeoutMs: 20000
+#    priority: 0
+#    tags:
+#      - java
+#    checks:
+#      port2181:
+#        type: portResponse
+#        alias: zkPort
+#        priority: 2
+#        timeoutMs: 2000
+#        host: localhost
+#        port: 2181
+#        threshold:
+#          warning:
+#            upper: 1000
+#          critical:
+#            upper: 3000
+#          addContext: true
+#        send: ruok
+#        responseThreshold:
+#          type: regex
+#          successRegex: imok
+#          addContext: true
+#          setMessage: true
+#        activeCheck:
+#          type: daily
+#          startTime: 09:00:59.234567891
+#          endTime: 17:00:03.345678901
+#          timeFormat: HH:mm:ss.SSSSSSSSS
+#        unknownIsCritical: false
+#        tags:
+#          - tcp
+#      zkProcess:
+#        type: shell
+#        alias: zkProcess
+#        priority: 1
+#        timeoutMs: 3000
+#        cmd: 'echo $SOME_VAR - $OTHER_VAR'
+#        env:
+#          SOME_VAR: someValue
+#          OTHER_VAR: otherValue
+#        tags:
+#          - ps
+#        recentChecks:
+#          sizeLimit: 20
+##      heapSize:
+##        type: javaheap
+##        port: 12181
+##        threshold:
+##          type: nagios
+##          warning: 80
+##          critical: 90
+##          addContext: true
+##          setMessage: true
+##          precision: 0
+##  kafka:
+##    alias: messaging
+##    cacheMs: 10000
+##    defaultCacheMs: 1000
+##    timeoutMs: 20000
+##    priority: 2
+##    active:
+##      type: disabled
+##    tags:
+##      - java
+##    checks:
+##      port9092:
+##        type: port
+##        alias: kafkaPort
+##        priority: 2
+##        timeoutMs: 1000
+##        port: 9092
+##        threshold:
+##          warning:
+##            upper: 200
+##          critical:
+##            upper: 500
+##          addContext: true
+##          setMessage: true
+##        tags:
+##          - tcp
+##  os:
+##    checks:
+##      system:
+##        type: system
+##        loadAverage:
+##          threshold:
+##            type: nagios
+##            warning: ~:0.9
+##            critical: ~:1
+##            setMessage: true
+#  test:
+#    timeoutMs: 2000
+#    checks:
+#      crit:
+#        type: critical
+#      warn:
+#        type: warning
+#      succeeded:
+#        type: succeeded
+#      timeout:
+#        type: timeout
+#        unknownIsCritical: false
