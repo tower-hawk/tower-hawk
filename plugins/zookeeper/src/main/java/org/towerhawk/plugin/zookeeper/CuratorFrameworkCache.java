@@ -22,30 +22,42 @@ public class CuratorFrameworkCache {
 	@Setter(AccessLevel.MODULE)
 	private static CuratorFrameworkCache cache = new CuratorFrameworkCache();
 
-	public CuratorFramework getCuratorFramework(String connection) {
-		return cacheMap.computeIfAbsent(connection, k -> {
-			if (connection.contains("/")) {
-				String[] serverPath = connection.split("/", 2);
-				CuratorFramework basePathFramework = getCuratorFramework(serverPath[0]);
-				try {
-					Stat stat = basePathFramework.checkExists().creatingParentsIfNeeded().forPath("/" + serverPath[1]);
-					if (stat == null) {
-						String value = basePathFramework.create().forPath("/" + serverPath[1], new byte[0]);
-						log.debug("{}, {}", stat, value);
-					}
-				} catch (Exception e) {
-					log.error("Unable to create base path /" + serverPath[1]);
-				}
-			}
-			CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient(connection, retryPolicy);
-			curatorFramework.start();
+	public synchronized CuratorFramework getCuratorFramework(String connection) {
+		String[] serverPath = connection.split("/", 2);
+		CuratorFramework basePathFramework = cacheMap.get(serverPath[0]);
+		if (basePathFramework == null) {
+			basePathFramework = CuratorFrameworkFactory.newClient(serverPath[0], retryPolicy);
+			cacheMap.put(serverPath[0], basePathFramework);
+			basePathFramework.start();
 			try {
-				curatorFramework.blockUntilConnected();
+				basePathFramework.blockUntilConnected();
 			} catch (InterruptedException e) {
 				// do nothing
 			}
-			return curatorFramework;
-		});
+		}
+		CuratorFramework curatorFramework = cacheMap.get(connection);
+		if (serverPath.length > 1 && curatorFramework == null) {
+			try {
+				Stat stat = basePathFramework.checkExists().creatingParentsIfNeeded().forPath("/" + serverPath[1]);
+				if (stat == null) {
+					String value = basePathFramework.create().forPath("/" + serverPath[1], new byte[0]);
+					log.debug("value={}", value);
+				} else {
+					log.debug("stat={}", stat);
+				}
+				curatorFramework = CuratorFrameworkFactory.newClient(connection, retryPolicy);
+				cacheMap.put(connection, curatorFramework);
+				curatorFramework.start();
+				try {
+					curatorFramework.blockUntilConnected();
+				} catch (InterruptedException e) {
+					// do nothing
+				}
+			} catch (Exception e) {
+				log.error("Unable to create base path /" + serverPath[1]);
+			}
+		}
+		return curatorFramework;
 	}
 
 }

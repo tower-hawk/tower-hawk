@@ -4,14 +4,14 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>towerhawk-plugins</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Towerhawk Plugins Parent</name>
 
     <parent>
         <groupId>org.towerhawk</groupId>
         <artifactId>towerhawk</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.1-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
 
